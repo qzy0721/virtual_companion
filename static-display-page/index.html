@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <script>document.documentElement.classList.add('js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fbf9fc">
+  <title>虚拟陪伴｜本地优先的 AI 3D 桌面伙伴</title>
+  <meta name="description" content="虚拟陪伴是一个个人开发的 Windows 桌面项目，将流式 AI 对话、实时语音、长期记忆、VRM 3D 角色和透明桌宠放进同一条交互链路。">
+  <meta name="keywords" content="虚拟陪伴,AI桌宠,VRM,实时语音,本地优先,桌面应用">
+  <meta property="og:title" content="虚拟陪伴｜AI 3D 桌面伙伴">
+  <meta property="og:description" content="流式对话、实时语音、长期记忆与 VRM 透明桌宠。一个持续迭代的个人项目。">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"虚拟陪伴","applicationCategory":"LifestyleApplication","operatingSystem":"Windows 10, Windows 11","softwareVersion":"0.2.0","description":"本地优先的 AI 3D 虚拟陪伴桌面应用。"}
+  </script>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" aria-label="虚拟陪伴首页"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a>
+      <nav class="nav-links" id="nav-links" aria-label="主导航">
+        <a href="#features">能力</a><a href="#details">细节</a><a href="pages/docs.html">文档</a><a href="pages/about.html">关于</a><a href="pages/download.html">下载</a>
+      </nav>
+      <a class="nav-cta" href="pages/download.html">获取 Windows 版</a>
+      <button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-atmosphere" data-parallax="0.12" aria-hidden="true">
+        <span class="hero-orb hero-orb-one"></span><span class="hero-orb hero-orb-two"></span><span class="hero-orb hero-orb-three"></span><span class="hero-grid"></span>
+      </div>
+      <div class="container hero-content">
+        <div class="hero-copy">
+          <div class="eyebrow">Personal project · Windows</div>
+          <h1>让喜欢的角色<br><span class="gradient-text">留在桌面，也留在对话里</span></h1>
+          <p class="hero-subtitle">一个本地优先的 AI 虚拟陪伴项目：把流式对话、实时语音、角色记忆、VRM 动作表情和透明桌宠整合成自然、连续的桌面体验。</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="pages/download.html">下载 v0.2.0</a>
+            <a class="btn btn-secondary" href="pages/docs/quickstart.html">查看快速开始</a>
+            <a class="btn btn-ghost" href="#features">了解它能做什么 →</a>
+          </div>
+          <p class="hero-note">个人开发 · 免费体验 · Windows 10/11 x64 · 部分 AI 能力需要自备第三方 API</p>
+        </div>
+        <div class="hero-demo" aria-hidden="true">
+          <div class="demo-window">
+            <div class="demo-titlebar">
+              <span class="demo-dots"><i></i><i></i><i></i></span>
+              <span class="demo-title">Virtual Companion</span>
+              <span class="demo-status"><i></i>本地运行中</span>
+            </div>
+            <div class="demo-stage">
+              <div class="demo-avatar">
+                <span class="demo-avatar-ring"></span>
+                <span class="demo-avatar-ring ring-delay"></span>
+                <span class="demo-avatar-core"></span>
+              </div>
+              <div class="demo-wave">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="demo-chat">
+              <div class="demo-msg demo-msg-user">今天陪我聊会儿吧</div>
+              <div class="demo-msg demo-msg-ai"><span id="demo-text"></span><span class="demo-caret"></span></div>
+            </div>
+            <div class="demo-input"><span>输入消息，或按住说话…</span><span class="demo-send">发送 ➤</span></div>
+          </div>
+          <span class="demo-chip chip-a">VRM 3D</span>
+          <span class="demo-chip chip-b">实时语音</span>
+          <span class="demo-chip chip-c">长期记忆</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span class="marquee-item">流式 AI 对话</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">实时语音链路</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">VRM 角色舞台</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">透明桌面宠物</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">长期记忆</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">本地优先</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">11 个内置动作</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">多主题界面</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">流式 AI 对话</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">实时语音链路</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">VRM 角色舞台</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">透明桌面宠物</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">长期记忆</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">本地优先</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">11 个内置动作</span><span class="marquee-dot">✦</span>
+        <span class="marquee-item">多主题界面</span><span class="marquee-dot">✦</span>
+      </div>
+    </div>
+
+    <section class="section section-tint" id="features">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">Problems, solved</div><h2 class="h2">每个功能，都对应一个真实痛点</h2><p>不是堆砌参数，而是回答六个具体问题：桌面陪伴到底难在哪，这个项目又如何解决。</p></header>
+        <div class="pairs">
+          <article class="pair reveal">
+            <div class="pair-problem"><span class="pair-tag tag-problem">痛点</span><p>聊天窗口用完即关，角色始终缺乏“存在感”。</p></div>
+            <span class="pair-arrow" aria-hidden="true">→</span>
+            <div class="pair-solution"><span class="pair-tag tag-solution">做法</span><h3>透明桌面宠物</h3><p>CEF 离屏渲染结合 Win32 透明窗口，角色常驻桌面：拖动、右键对话、托盘管理、舞台尺寸和待机动作都可设置。</p></div>
+          </article>
+          <article class="pair reveal">
+            <div class="pair-problem"><span class="pair-tag tag-problem">痛点</span><p>语音助手“说完就忘”，每次对话都从零开始。</p></div>
+            <span class="pair-arrow" aria-hidden="true">→</span>
+            <div class="pair-solution"><span class="pair-tag tag-solution">做法</span><h3>人格 + 长期记忆</h3><p>角色人格、当前历史与长期记忆共同参与上下文，回复流式逐步呈现，兼容 OpenAI 风格接口。</p></div>
+          </article>
+          <article class="pair reveal">
+            <div class="pair-problem"><span class="pair-tag tag-problem">痛点</span><p>语音问答像对讲机：说完等待、听完再答，节奏割裂。</p></div>
+            <span class="pair-arrow" aria-hidden="true">→</span>
+            <div class="pair-solution"><span class="pair-tag tag-solution">做法</span><h3>实时语音链路</h3><p>流式 ASR、按句 TTS 与自动对话模式协同工作，端到端延迟 800ms，实际速度随网络和模型服务波动。</p></div>
+          </article>
+          <article class="pair reveal">
+            <div class="pair-problem"><span class="pair-tag tag-problem">痛点</span><p>平面头像和文字气泡，撑不起角色的情感表达。</p></div>
+            <span class="pair-arrow" aria-hidden="true">→</span>
+            <div class="pair-solution"><span class="pair-tag tag-solution">做法</span><h3>VRM 角色舞台</h3><p>Three.js 与 three-vrm 驱动模型、表情、口型和 11 个内置 VRMA 动作，也支持切换自己的 VRM。</p></div>
+          </article>
+          <article class="pair reveal">
+            <div class="pair-problem"><span class="pair-tag tag-problem">痛点</span><p>合成声音千篇一律，换角色像换皮。</p></div>
+            <span class="pair-arrow" aria-hidden="true">→</span>
+            <div class="pair-solution"><span class="pair-tag tag-solution">做法</span><h3>角色与声音绑定</h3><p>角色设定可手写或辅助生成，每个角色可选 CosyVoice 或 Qwen3-TTS 声音链路；无声音配置也能文字对话。</p></div>
+          </article>
+          <article class="pair reveal">
+            <div class="pair-problem"><span class="pair-tag tag-problem">痛点</span><p>云端陪伴产品把对话、记忆和偏好全部收走。</p></div>
+            <span class="pair-arrow" aria-hidden="true">→</span>
+            <div class="pair-solution"><span class="pair-tag tag-solution">做法</span><h3>本地优先</h3><p>角色、配置、历史和记忆默认保存在本机；使用云端 LLM、ASR 或 TTS 时，只发送完成对应能力所需的数据。</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="flow">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">Watch it work</div><h2 class="h2">看一句话走完整个链路</h2><p>从说出口到角色回应，五个阶段自动衔接、部分并行。下面是这条链路的简化演示。</p></header>
+        <div class="flow reveal" id="flow-demo">
+          <div class="flow-track">
+            <div class="flow-node">
+              <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg></span>
+              <strong>说出口</strong><span>麦克风拾音</span>
+            </div>
+            <div class="flow-link"><i></i></div>
+            <div class="flow-node">
+              <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 11h10"/><path d="M4 16h7"/></svg></span>
+              <strong>听懂</strong><span>流式 ASR 转写</span>
+            </div>
+            <div class="flow-link"><i></i></div>
+            <div class="flow-node">
+              <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="7" y="7" width="10" height="10" rx="2.5"/><path d="M12 2v3"/><path d="M12 19v3"/><path d="M2 12h3"/><path d="M19 12h3"/></svg></span>
+              <strong>想起</strong><span>人格与记忆注入</span>
+            </div>
+            <div class="flow-link"><i></i></div>
+            <div class="flow-node">
+              <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l1.9 4.7 4.6 1.3-4.6 1.3L12 16l-1.9-4.7-4.6-1.3 4.6-1.3Z"/><path d="M18.5 15.5l.8 2 2 .7-2 .7-.8 2-.7-2-2-.7 2-.7Z"/></svg></span>
+              <strong>组织语言</strong><span>LLM 流式生成</span>
+            </div>
+            <div class="flow-link"><i></i></div>
+            <div class="flow-node">
+              <span class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l5 4V6l-5 4H4Z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></svg></span>
+              <strong>回应</strong><span>TTS · 表情 · 动作</span>
+            </div>
+          </div>
+          <p class="flow-caption" id="flow-caption">按住说话或右键桌宠，声音以 PCM 流实时送出。</p>
+        </div>
+        <p class="flow-more reveal"><a href="#details">在下方功能细节中查看完整链路 →</a></p>
+      </div>
+    </section>
+
+    <section class="section section-tint">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">Built as one experience</div><h2 class="h2">主窗口与桌宠，共用同一个角色状态</h2><p>在主窗口里管理角色、模型、设置和文字消息；收起主窗口后，桌宠继续留在桌面并承接语音对话。</p></header>
+        <div class="feature-list">
+          <div class="feature reveal"><h3>主窗口</h3><p>角色切换、文字与语音聊天、历史、长期记忆、VRM 上传和服务设置。</p></div>
+          <div class="feature reveal"><h3>桌宠窗口</h3><p>透明悬浮、右键对话、模型与动作同步、宽高独立调整，不占用任务栏。</p></div>
+          <div class="feature reveal"><h3>系统托盘</h3><p>主窗口关闭后继续运行，可恢复主窗口、打开或关闭桌宠，以及完整退出应用。</p></div>
+          <div class="feature reveal"><h3>首次配置</h3><p>安装后通过图形化向导填写 LLM 与 DashScope 配置，之后也能在设置页修改。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="scenes">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">A day together</div><h2 class="h2">陪伴藏在日常的间隙里</h2><p>不需要专门打开一个应用。她就在桌面上，在工作的间隙、闲聊的瞬间和深夜的托盘里。</p></header>
+        <div class="scenes">
+          <article class="scene reveal"><span class="scene-time">09:30</span><h3>开始一天</h3><p>开机后角色回到桌面角落，伸个懒腰进入待机，不抢占注意力。</p></article>
+          <article class="scene reveal"><span class="scene-time">14:00</span><h3>随口一聊</h3><p>右键桌宠直接开口，流式识别说完即回，还记得你昨天提过的事。</p></article>
+          <article class="scene reveal"><span class="scene-time">19:20</span><h3>换种心情</h3><p>在主窗口切换角色、声音或 VRM 模型，桌宠舞台立即同步。</p></article>
+          <article class="scene reveal"><span class="scene-time">23:40</span><h3>安静道晚安</h3><p>主窗口收进托盘，角色进入 Sleepy 待机，服务仍在后台安静运行。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tint" id="privacy">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">Local first, honestly</div><h2 class="h2">哪些留在本机，哪些按需出门</h2><p>本地优先不等于假装离线。数据边界直接画出来：云端能力只发送完成对应功能所需的内容。</p></header>
+        <div class="boundary reveal">
+          <div class="boundary-side boundary-local">
+            <div class="boundary-title"><span class="boundary-dot dot-sage"></span>留在本机</div>
+            <ul>
+              <li>角色设定与人格</li>
+              <li>对话历史</li>
+              <li>长期记忆摘要</li>
+              <li>参考音频与服务配置</li>
+            </ul>
+          </div>
+          <div class="boundary-gate" aria-hidden="true">
+            <span class="boundary-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+          </div>
+          <div class="boundary-side boundary-cloud">
+            <div class="boundary-title"><span class="boundary-dot dot-lilac"></span>按需发送</div>
+            <ul>
+              <li>当前消息 <em>→</em> LLM</li>
+              <li>语音流 <em>→</em> ASR</li>
+              <li>回复句子 <em>→</em> TTS</li>
+              <li>仅发往自备 Key 的服务商</li>
+            </ul>
+          </div>
+        </div>
+        <p class="boundary-note reveal">不配置云端服务时，仍可正常管理角色、浏览历史与调整设置，仅 AI 相关能力暂停。</p>
+      </div>
+    </section>
+
+    <section class="section" id="details">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">Product details</div><h2 class="h2">功能细节</h2><p>以下描述以当前项目实际实现为准：它是单机单用户桌面应用，不是多人在线平台，也不承诺所有能力完全离线。</p></header>
+        <div class="cards">
+          <article class="card reveal"><span class="card-number">01</span><h3>对话与角色人格</h3><p>支持 OpenAI 兼容 LLM 接口，流式展示回复；角色设定可手写、由 LLM 生成，或用百科资料辅助生成。</p><div class="tag-row"><span class="tag">流式回复</span><span class="tag">角色提示词</span><span class="tag">上下文历史</span></div></article>
+          <article class="card reveal"><span class="card-number">02</span><h3>语音识别与自动对话</h3><p>浏览器采集 PCM 音频，经本地 WebSocket 转发到 DashScope ASR。自动对话模式负责监听、识别、回复和重新监听。</p><div class="tag-row"><span class="tag">流式 ASR</span><span class="tag">自动对话</span><span class="tag">麦克风状态</span></div></article>
+          <article class="card reveal"><span class="card-number">03</span><h3>角色声音</h3><p>支持 CosyVoice 与 Qwen3-TTS 两条角色级声音链路。TTS 按句排队播放，并用音频幅度驱动模型口型。</p><div class="tag-row"><span class="tag">按句播放</span><span class="tag">声音复刻</span><span class="tag">口型驱动</span></div></article>
+          <article class="card reveal"><span class="card-number">04</span><h3>VRM 与动作表情</h3><p>Three.js、three-vrm 和 three-vrm-animation 驱动模型。当前包含 Idle、LookAround、Relax、Sleepy 等 11 个 VRMA 文件。</p><div class="tag-row"><span class="tag">VRM</span><span class="tag">VRMA</span><span class="tag">BlendShape</span></div></article>
+          <article class="card reveal"><span class="card-number">05</span><h3>透明桌宠</h3><p>CEF OSR 将页面渲染到 Win32 分层窗口，支持透明背景、托盘管理、右键对话、模型同步和独立宽高设置。</p><div class="tag-row"><span class="tag">CEF C API</span><span class="tag">Win32</span><span class="tag">透明悬浮</span></div></article>
+          <article class="card reveal"><span class="card-number">06</span><h3>历史与长期记忆</h3><p>对话历史保存在本机；长期记忆通过摘要生成并在后续对话中注入。用户可以查看、生成或清空相关数据。</p><div class="tag-row"><span class="tag">本地 JSON</span><span class="tag">长期摘要</span><span class="tag">角色隔离</span></div></article>
+          <article class="card reveal"><span class="card-number">07</span><h3>桌面应用壳</h3><p>WinForms + WebView2 承载 Vue 前端，并管理本地 FastAPI 服务、单实例、系统托盘、窗口生命周期和设置后重启。</p><div class="tag-row"><span class="tag">Windows x64</span><span class="tag">WebView2</span><span class="tag">本地服务</span></div></article>
+          <article class="card reveal"><span class="card-number">08</span><h3>数据边界</h3><p>配置、角色、历史和参考音频默认留在本机；使用第三方 LLM、ASR、TTS 或 OSS 时，对应请求会发送到所配置的服务。</p><div class="tag-row"><span class="tag">本地优先</span><span class="tag">可见配置</span><span class="tag">第三方依赖</span></div></article>
+          <article class="card reveal"><span class="card-number">09</span><h3>当前限制</h3><p>仅支持 Windows x64；安装包尚未进行 Authenticode 签名；云端能力受网络、额度和第三方模型行为影响。</p><div class="tag-row"><span class="tag">个人项目</span><span class="tag">持续迭代</span><span class="tag">非离线模型</span></div></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tint" id="comparison">
+      <div class="container">
+        <header class="section-header reveal"><div class="section-label">Why it feels different</div><h2 class="h2">优势不在单项参数，而在链路融合</h2><p>这里的“现有方案”指常见产品形态，不针对具体品牌。不同工具各有优势，虚拟陪伴更关注桌面存在感与角色状态连续性。</p></header>
+        <div class="table-wrap reveal"><table class="comparison-table">
+          <thead><tr><th>体验维度</th><th>常规 AI 聊天应用</th><th>3D 模型展示 / VTuber 工具</th><th>虚拟陪伴</th></tr></thead>
+          <tbody>
+            <tr><td><strong>核心目标</strong></td><td>高效文字或语音问答</td><td>模型展示、直播驱动与创作</td><td>持续的角色陪伴与桌面交互</td></tr>
+            <tr><td><strong>角色一致性</strong></td><td>通常以提示词或会话为主</td><td>外观强，但对话人格往往依赖外部工具</td><td>人格、历史、记忆、声音与 VRM 在同一应用链路中</td></tr>
+            <tr><td><strong>语音闭环</strong></td><td>通常有语音输入或朗读</td><td>侧重实时捕捉，AI 对话需额外拼装</td><td>ASR → LLM → 分句 TTS → 口型与动作自动串联</td></tr>
+            <tr><td><strong>桌面存在</strong></td><td>主要停留在应用窗口</td><td>可以悬浮，但多面向录制或直播</td><td>透明桌宠独立运行，主窗口收进托盘后仍可继续对话</td></tr>
+            <tr><td><strong>情感表现</strong></td><td>以文本、语调或头像为主</td><td>依赖操作者或捕捉设备驱动</td><td>回复句子自动映射表情、动作与音频口型</td></tr>
+            <tr><td><strong>数据方式</strong></td><td>多以云端账户和服务为中心</td><td>模型与工程文件通常本地保存</td><td>角色、历史、记忆与配置本地保存；云端能力按配置调用</td></tr>
+            <tr><td><strong>部署与改造</strong></td><td>开箱即用，但内部链路较封闭</td><td>扩展强，但整合成本较高</td><td>单机开箱体验与可读本地 API 并存，适合继续开发</td></tr>
+          </tbody>
+        </table></div>
+        <div class="advantage-grid">
+          <article class="soft-panel reveal"><span>01</span><h3>低切换成本</h3><p>文字、语音、模型、记忆与桌宠不需要在多个工具之间切换，角色状态也不必手工搬运。</p></article>
+          <article class="soft-panel reveal"><span>02</span><h3>对话和表现同步</h3><p>前端在句子生成时并行安排 TTS，并在完整回复后修正情感动作，兼顾即时反馈和整体准确度。</p></article>
+          <article class="soft-panel reveal"><span>03</span><h3>主窗口可退出视线</h3><p>系统托盘保留服务和桌宠，使用者可以回到原本工作，不必持续盯着聊天界面。</p></article>
+          <article class="soft-panel reveal"><span>04</span><h3>边界透明</h3><p>本地数据与第三方 API 职责分开说明；应用不会把“本地优先”包装成完全离线。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="stats reveal">
+          <div class="stat"><div class="stat-value" data-count="800">0</div><div class="stat-label">ms 端到端延迟</div></div>
+          <div class="stat"><div class="stat-value" data-count="11">0</div><div class="stat-label">内置 VRMA 动作</div></div>
+          <div class="stat"><div class="stat-value" data-count="5">0</div><div class="stat-label">界面主题</div></div>
+          <div class="stat"><div class="stat-value" data-count="2">0</div><div class="stat-label">可选 TTS 链路</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="download-card reveal">
+          <span class="badge badge-sage">当前可用版本</span>
+          <h2 class="h2">VirtualCompanion v0.2.0</h2>
+          <p class="lead">Windows 10/11 x64 安装包，包含桌面壳与本地服务运行环境。无需单独安装 Python 或 .NET 8。</p>
+          <div class="download-meta"><span>约 190.4 MiB</span><span>2026-08-04 构建</span><span>需要 WebView2 Runtime</span></div>
+          <div class="download-actions"><a class="btn btn-primary" href="pages/download.html">前往下载与校验</a><a class="btn btn-secondary" href="pages/download.html#requirements">先看使用要求</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="container"><div class="footer-main"><div class="footer-brand"><a href="index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><p>一个持续迭代的个人项目，尝试把 AI 对话与 3D 桌面角色做成自然、可控的日常体验。</p></div><nav class="footer-links" aria-label="页脚导航"><a href="#details">功能细节</a><a href="pages/docs.html">使用文档</a><a href="pages/download.html">下载</a><a href="pages/about.html">关于项目</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>个人项目 · 非商业宣传页面</span></div></div></footer>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+beautifulsoup4>=4.12
+cef-capi-py>=131.0,<132
+curl-cffi>=0.7
+dashscope>=1.20
+fastapi>=0.110
+openai>=1.0
+oss2>=2.18
+pypinyin>=0.51
+python-dotenv>=1.0
+python-multipart>=0.0.9
+uvicorn[standard]>=0.27
+websockets>=13,<17

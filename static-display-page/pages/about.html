@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc">
+  <title>关于项目｜虚拟陪伴</title><meta name="description" content="虚拟陪伴是一个探索 AI 对话、角色声音、长期记忆与 VRM 桌宠融合体验的个人项目。">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg"><link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header class="nav"><div class="nav-inner"><a href="../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../index.html#features">能力</a><a href="../index.html#details">细节</a><a href="docs.html">文档</a><a class="active" href="about.html">关于</a><a href="download.html">下载</a></nav><a class="nav-cta" href="download.html">获取 Windows 版</a><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main>
+    <header class="page-header container"><div class="section-label">About the project</div><h1 class="h1">关于这个项目</h1><p>虚拟陪伴是一个由个人持续维护的开发项目。这里不虚构团队背景或发展历程，只展示当前已经实现的产品与工程实践。</p></header>
+    <section class="page-section"><div class="container">
+      <div class="cards">
+        <article class="card reveal"><span class="card-number">A</span><h3>为什么做</h3><p>普通聊天页面很难形成“角色就在身边”的感受。我想探索语言、声音、动作、模型和桌面空间能否组合成更自然的陪伴体验。</p></article>
+        <article class="card reveal"><span class="card-number">B</span><h3>如何取舍</h3><p>优先把核心链路跑通，再逐步优化透明窗口、托盘、模型同步、状态恢复和设置体验，而不是先搭建庞大的平台概念。</p></article>
+        <article class="card reveal"><span class="card-number">C</span><h3>数据态度</h3><p>能够保留在本机的数据尽量留在本机；必须依赖云服务的部分明确说明边界，让用户知道哪些内容会离开设备。</p></article>
+      </div>
+      <article class="prose">
+        <h2>当前技术组成</h2><ul><li>Vue 3、Vite、Three.js、three-vrm：主界面与 3D 模型舞台。</li><li>FastAPI：本地接口、对话、角色、语音、记忆和桌宠控制。</li><li>WinForms、WebView2：Windows 主窗口、托盘与本地服务生命周期。</li><li>CEF C API、Win32 layered window：透明桌宠的离屏渲染与窗口合成。</li><li>PyInstaller、Inno Setup：本地服务运行时与安装包。</li></ul>
+        <h2>项目状态</h2><p>当前是持续迭代中的 Windows 单机应用，适合体验和开发验证。它还不是经过代码签名、自动更新、规模化兼容测试和正式支持体系打磨的成熟商业软件。</p>
+        <h2>接下来关注什么</h2><p>优先改善角色与模型配置的一致性、首次使用引导、服务自检、多显示器与 DPI 适配，以及对话状态反馈。目标不是让功能表更长，而是让已经存在的能力更可靠、更容易理解。</p>
+      </article>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><div class="footer-main"><a href="../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../index.html#details">功能细节</a><a href="docs.html">文档</a><a href="download.html">下载</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>个人项目</span></div></div></footer>
+  <script src="../js/main.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+# =============================================
+# 核心规则：所有文本文件在提交时统一转为 LF
+# =============================================
+* text=auto
+
+# =============================================
+# Windows 脚本（必须使用 CRLF，否则可能报错）
+# =============================================
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+*.reg text eol=crlf
+
+# =============================================
+# Unix/Linux 脚本（必须使用 LF）
+# =============================================
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+*.fish text eol=lf
+
+# =============================================
+# 主流编程语言文件（强制 LF，保证跨平台一致）
+# =============================================
+*.py text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+*.html text eol=lf
+*.htm text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.go text eol=lf
+*.rs text eol=lf
+*.java text eol=lf
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.hpp text eol=lf
+*.cs text eol=lf
+*.php text eol=lf
+*.rb text eol=lf
+*.swift text eol=lf
+*.kt text eol=lf
+*.dart text eol=lf
+*.vue text eol=lf
+*.svelte text eol=lf
+*.lua text eol=lf
+*.r text eol=lf
+*.m text eol=lf
+*.mm text eol=lf
+
+# =============================================
+# 二进制文件（严禁任何行尾转换，否则会损坏文件）
+# =============================================
+# 图片
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.bmp binary
+*.psd binary
+*.tiff binary
+
+# 压缩包
+*.zip binary
+*.gz binary
+*.rar binary
+*.7z binary
+*.tar binary
+*.bz2 binary
+*.xz binary
+
+# 可执行文件 / 编译产物
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.a binary
+*.o binary
+*.obj binary
+
+# 文档 / 多媒体
+*.pdf binary
+*.doc binary
+*.docx binary
+*.xls binary
+*.xlsx binary
+*.ppt binary
+*.pptx binary
+*.mp4 binary
+*.avi binary
+*.mov binary
+*.mkv binary
+*.mp3 binary
+*.wav binary
+*.flac binary
+
+# 锁文件（避免意外转换）
+*.lock binary

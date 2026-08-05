@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc">
+  <title>下载｜虚拟陪伴 v0.2.0</title><meta name="description" content="下载虚拟陪伴 v0.2.0 Windows x64 安装包，并查看系统要求、SHA256 校验值与安装说明。">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg"><link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header class="nav"><div class="nav-inner"><a href="../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../index.html#features">能力</a><a href="../index.html#details">细节</a><a href="docs.html">文档</a><a href="about.html">关于</a><a class="active" href="download.html">下载</a></nav><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main>
+    <header class="page-header container"><div class="section-label">Download</div><h1 class="h1">下载 Windows 版</h1><p>当前发布资产与页面版本保持一致。安装前建议阅读系统要求，并在下载后核对 SHA256。</p></header>
+    <section class="page-section"><div class="container">
+      <div class="download-card reveal">
+        <span class="badge badge-sage">当前版本</span><h2 class="h2">VirtualCompanion v0.2.0</h2>
+        <p class="lead">适用于 Windows 10/11 x64。安装包内含桌面应用与 Python 3.11 本地服务运行环境，不需要另装 Python 或 .NET 8。</p>
+        <div class="download-meta"><span>文件：VirtualCompanion-Setup-0.2.0.exe</span><span>199,659,354 bytes</span><span>构建于 2026-08-04</span></div>
+        <div class="download-actions">
+          <a class="btn btn-primary" href="../downloads/VirtualCompanion-Setup-0.2.0.exe" download>下载 Windows 安装包</a>
+          <a class="btn btn-secondary" href="../downloads/sourcecode.zip" download>下载源码包</a>
+        </div>
+        <p class="checksum"><strong>SHA256</strong><br>EC15E153F4D4B2278FF24BE32F104E72F303B1F2B27006E47F9F17F49F22C85A</p>
+        <div class="notice">当前安装包尚未进行 Authenticode 代码签名，Windows 可能显示 SmartScreen 提示。请仅从本页面下载，并使用上方 SHA256 核对文件完整性。</div>
+      </div>
+
+      <div class="prose">
+        <h2 id="requirements">使用要求</h2>
+        <ul><li>Windows 10 或 Windows 11，x64 架构。</li><li>Microsoft Edge WebView2 Evergreen Runtime；Windows 11 通常已预装，缺失时应用会提供安装入口。</li><li>至少需要一组 OpenAI 兼容 LLM 配置和 DashScope API Key，才能使用完整对话与语音能力。</li><li>CosyVoice 声音复刻还需要可公网访问的 OSS 配置；Qwen3-TTS 不要求用户购买 OSS。</li></ul>
+        <h2>安装与升级</h2>
+        <ol><li>下载安装包并运行，默认安装到当前用户的 <code>%LOCALAPPDATA%\Programs\VirtualCompanion</code>。</li><li>首次启动在配置向导中填写 API 信息，也可以跳过后稍后设置。</li><li>升级时直接运行新安装包即可。角色、配置、历史、记忆和参考音频位于 <code>%LOCALAPPDATA%\VirtualCompanion</code>，安装器不会主动删除。</li></ol>
+        <h2>隐私说明</h2>
+        <p>本项目是本地优先而不是完全离线。角色、历史和配置默认存放于本机；当你使用 LLM、DashScope ASR、TTS 或 OSS 时，完成请求所需的文本、音频或相关数据会发送到你所配置的第三方服务。</p>
+      </div>
+    </div></section>
+  </main>
+  <footer class="footer"><div class="container"><div class="footer-main"><a href="../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../index.html#details">功能细节</a><a href="docs.html">文档</a><a href="about.html">关于项目</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>个人项目</span></div></div></footer>
+  <script src="../js/main.js" defer></script>
+</body>
+</html>
