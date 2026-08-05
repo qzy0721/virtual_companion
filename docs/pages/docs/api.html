@@ -1,0 +1,66 @@
+<!doctype html><html lang="zh-CN"><head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc"><title>本地 API 参考｜虚拟陪伴文档</title><meta name="description" content="虚拟陪伴 FastAPI 本地接口、SSE 和 WebSocket 参考。"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../css/style.css">
+</head><body>
+  <header class="nav"><div class="nav-inner"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../../index.html#details">细节</a><a class="active" href="../docs.html">文档</a><a href="../about.html">关于</a><a href="../download.html">下载</a></nav><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main><header class="page-header container"><div class="section-label">Local API</div><h1 class="h1">API 参考</h1><p>接口只服务于本机桌面应用。端口由桌面壳启动时选择，开发模式可从 8000 起自动寻找可用端口。</p></header>
+    <section class="page-section"><div class="container doc-layout">
+      <aside class="doc-sidebar"><strong>接口分组</strong><a href="#conventions">约定</a><a href="#chat">对话 SSE</a><a href="#expressions">表情动作</a><a href="#tts">TTS</a><a href="#asr">ASR WebSocket</a><a href="#roles">角色</a><a href="#history">历史与记忆</a><a href="#pet">桌宠</a><a href="#settings">设置与主控</a></aside>
+      <article class="prose doc-content">
+        <h2 id="conventions">调用约定</h2><p>示例 Base URL：<code>http://127.0.0.1:8000</code>。桌面版不要硬编码端口，应使用当前页面同源地址。FastAPI 交互式 OpenAPI 页面位于运行中服务的 <code>/docs</code>。</p><div class="callout warning">这些接口没有设计为公网多用户 API。不要直接把本地服务监听地址暴露到外网。</div>
+
+        <h2 id="chat">对话</h2>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/chat</span></div><p>发起角色对话，返回 <code>text/event-stream</code>。</p><pre><code>{
+  "role_name": "默认角色",
+  "message": "今天过得怎么样？"
+}</code></pre><div class="table-wrap"><table><thead><tr><th>SSE event</th><th>data.data</th><th>用途</th></tr></thead><tbody><tr><td>delta</td><td>最新增量文本</td><td>逐 token/片段更新 UI</td></tr><tr><td>text</td><td>当前完整回复</td><td>兼容完整文本更新</td></tr><tr><td>sentence</td><td>完整句子</td><td>进入 TTS 和即时表情分析</td></tr><tr><td>done</td><td>完整回复</td><td>已持久化本轮历史</td></tr><tr><td>error</td><td>错误信息</td><td>中断当前管线</td></tr></tbody></table></div></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-delete">DELETE</span><span class="api-path">/api/chat/history</span></div><p>清空全部持久化对话历史。主界面通常使用更细粒度的 <code>/api/history</code>。</p></div>
+
+        <h2 id="expressions">表情与动作分析</h2>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/chat/expressions</span></div><pre><code>{
+  "sentences": ["见到你真开心。"],
+  "available_expressions": ["happy", "sad", "neutral"],
+  "available_actions": ["none", "clapping", "look_around"]
+}</code></pre><pre><code>{
+  "expressions": [{
+    "sentence_index": 0,
+    "expression": "happy",
+    "intensity": 0.8,
+    "action": "clapping"
+  }]
+}</code></pre><p>动作名称会标准化为 snake_case，并确保 <code>none</code> 始终可用。</p></div>
+
+        <h2 id="tts">语音合成</h2>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/tts</span></div><pre><code>{ "text": "欢迎回来。", "role_name": "默认角色" }</code></pre><pre><code>{
+  "url": "/tts_audio/tts_ab12cd34.wav",
+  "filename": "tts_ab12cd34.wav",
+  "duration_ms": 1840
+}</code></pre><p><code>text</code> 长度限制 1–500。后端按角色记录选择 TTS 引擎，并串行合成以避免云端 WebSocket 冲突。</p></div>
+
+        <h2 id="asr">实时语音识别</h2>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-ws">WS</span><span class="api-path">/api/asr/stream</span></div><p>连接后先发送控制消息，再发送单声道 16 kHz、16-bit PCM 二进制帧：</p><pre><code>{ "type": "start", "language_hints": ["zh", "ja", "en"] }
+// binary PCM frames...
+{ "type": "stop" }</code></pre><div class="table-wrap"><table><thead><tr><th>事件</th><th>说明</th></tr></thead><tbody><tr><td>ready</td><td>云端识别任务已就绪</td></tr><tr><td>partial</td><td>中间识别文本</td></tr><tr><td>final</td><td>一次 VAD 断句结果</td></tr><tr><td>done</td><td>整段识别完成</td></tr><tr><td>error</td><td>连接或识别错误</td></tr></tbody></table></div></div>
+
+        <h2 id="roles">角色管理</h2>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-get">GET</span><span class="api-path">/api/roles</span></div><p>返回 <code>{"roles":["默认角色"]}</code>。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-get">GET</span><span class="api-path">/api/roles/{role_name}</span></div><p>返回人格提示词、参考音频、voice_id、voice_provider、OSS URL、目标模型和时间戳。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/roles</span></div><p><code>multipart/form-data</code>：<code>role_name</code>、<code>voice_provider</code>、可选 <code>audio</code>。LLM 自动生成提示词。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/roles/create-with-baike</span></div><p>比普通创建多一个 <code>baike_query</code>，抓取失败时回退为普通生成。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/roles/register</span></div><p>用户直接提交 <code>system_prompt</code>，跳过 LLM 生成；参考音频为空时尝试默认音频。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-delete">DELETE</span><span class="api-path">/api/roles/{role_name}</span></div><p>删除角色，并尝试清理关联云端音色和 OSS 资源。</p></div>
+
+        <h2 id="history">历史与记忆</h2>
+        <div class="table-wrap"><table><thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead><tbody><tr><td>GET</td><td><code>/api/history?role=名称</code></td><td>获取全部或指定角色历史</td></tr><tr><td>DELETE</td><td><code>/api/history?role=名称</code></td><td>清空全部或指定角色历史</td></tr><tr><td>GET</td><td><code>/api/memory</code></td><td>读取长期记忆</td></tr><tr><td>POST</td><td><code>/api/memory/generate</code></td><td>从最多 200 条历史中生成摘要</td></tr><tr><td>DELETE</td><td><code>/api/memory</code></td><td>清空长期记忆</td></tr></tbody></table></div>
+
+        <h2 id="pet">桌宠接口</h2>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/pet/open · /close · /quit</span></div><p><code>open</code> 可选宽高；<code>close</code> 隐藏；<code>quit</code> 退出桌宠界面但保留 CEF 线程待命。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-get">GET</span><span class="api-path">/api/pet/status</span></div><pre><code>{ "alive": true, "ready": true, "visible": true, "available": true }</code></pre></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-put">PUT</span><span class="api-path">/api/pet/preferences</span></div><pre><code>{ "width": 620, "height": 480, "idle_action": "look_around" }</code></pre><p>偏好宽高范围 360–800，并持久化到用户数据目录。</p></div>
+        <div class="api-endpoint"><div class="api-heading"><span class="api-method method-post">POST</span><span class="api-path">/api/pet/model</span></div><p><code>multipart/form-data</code> 的 <code>file</code> 仅接受 <code>.vrm</code>，最大 100 MiB；保存后向已就绪桌宠推送新模型 URL。</p></div>
+        <p>其他桌宠接口包括 <code>/resize</code>、<code>/transparent</code>、<code>/drive</code>、<code>/ready</code>、<code>/capabilities</code>、<code>/context</code> 和 <code>/theme</code>。</p>
+
+        <h2 id="settings">设置与桌面主控</h2><div class="table-wrap"><table><thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead><tbody><tr><td>GET</td><td><code>/api/settings/status</code></td><td>返回非敏感配置与密钥掩码状态</td></tr><tr><td>PUT</td><td><code>/api/settings</code></td><td>保存设置并以 202 表示需要服务重启</td></tr><tr><td>POST</td><td><code>/api/shell/show-main</code></td><td>桌宠请求恢复主窗口</td></tr><tr><td>GET</td><td><code>/api/shell/next</code></td><td>WinForms 长轮询获取待处理命令</td></tr></tbody></table></div>
+      </article>
+    </div></section>
+  </main><footer class="footer"><div class="container"><div class="footer-main"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../docs.html">文档中心</a><a href="development.html">开发文档</a><a href="faq.html">FAQ</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>API 参考</span></div></div></footer><script src="../../js/main.js" defer></script>
+</body></html>

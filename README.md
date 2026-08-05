@@ -93,7 +93,7 @@ Windows 11 通常自带 Microsoft Edge WebView2 Evergreen Runtime；若缺失，
 http://127.0.0.1:<端口>/docs
 ```
 
-也就是说，**API 文档就在后端网页的 `/docs` 路径**。接口字段、请求示例与实时事件格式请以该页面显示内容为准；仓库中的 [api_docs.md](api_docs.md) 可作为补充参考。
+也就是说，**API 文档就在后端网页的 `/docs` 路径**。接口字段、请求示例与实时事件格式请以该页面显示内容为准；仓库中的 [api_docs.md](api_docs.md) 可作为补充参考,但可能过时。
 
 ## 数据与隐私
 

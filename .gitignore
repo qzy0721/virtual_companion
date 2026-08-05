@@ -20,10 +20,10 @@ dist-*/
 !web/public/assets/胡桃.vrm
 !web/public/assets/animations/
 !web/public/assets/animations/*.vrma
-docs
 \v0
 sourcecode
 sourcecode.zip
 .agents
 .zcode
 AGENT.md
+docs_forpaper

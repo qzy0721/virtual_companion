@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc"><title>FAQ｜虚拟陪伴文档</title><meta name="description" content="虚拟陪伴安装、API、语音、VRM、桌宠和隐私常见问题。"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../css/style.css">
+</head><body>
+  <header class="nav"><div class="nav-inner"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../../index.html#details">细节</a><a class="active" href="../docs.html">文档</a><a href="../about.html">关于</a><a href="../download.html">下载</a></nav><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main><header class="page-header container"><div class="section-label">FAQ</div><h1 class="h1">常见问题</h1><p>这里保留独立的详细 FAQ。问题仍未解决时，优先查看本地服务日志。</p></header>
+    <section class="page-section"><div class="container prose">
+      <div class="faq-list">
+        <details open><summary>这是完全离线的软件吗？</summary><div class="faq-answer">不是。角色、配置、历史、记忆和参考文件默认在本机；LLM、DashScope ASR、TTS 和可选 OSS 会按配置访问第三方云服务。桌宠渲染和本地服务编排在本机完成。</div></details>
+        <details><summary>必须同时配置所有 API 才能使用吗？</summary><div class="faq-answer">不需要。LLM 配置完成后可先进行文字对话。DashScope 用于语音识别和角色声音；OSS 只在使用 CosyVoice 声音复刻时需要。</div></details>
+        <details><summary>为什么 Windows 显示 SmartScreen 提示？</summary><div class="faq-answer">当前安装包尚未进行 Authenticode 代码签名。请确认下载来源并核对 SHA256。正式公开分发前仍需要加入证书签名和时间戳流程。</div></details>
+        <details><summary>主窗口提示缺少 WebView2 怎么办？</summary><div class="faq-answer">安装 Microsoft Edge WebView2 Evergreen Runtime 后重新启动应用。Windows 11 通常已预装，但精简系统或旧版 Windows 可能没有。</div></details>
+        <details><summary>语音按钮没有识别结果怎么办？</summary><div class="faq-answer">确认 DashScope Key 有效、系统麦克风可用、Windows 隐私设置允许桌面应用使用麦克风，并检查网络。详细错误通常写入 <code>%LOCALAPPDATA%\VirtualCompanion\logs\server.log</code>。</div></details>
+        <details><summary>为什么有文字回复但没有声音？</summary><div class="faq-answer">当前角色可能没有 <code>voice_id</code>，或 TTS 服务配置不完整。可以在角色管理查看语音引擎，在设置页确认 DashScope 与可选 OSS，然后重试角色声音注册。</div></details>
+        <details><summary>Qwen3-TTS 和 CosyVoice 如何选择？</summary><div class="faq-answer">Qwen3-TTS 可以直接提交本地参考音频，不要求用户配置 OSS，适合快速体验；CosyVoice 需要公网参考音频和 OSS 配置。每个角色可以独立保存所选引擎。</div></details>
+        <details><summary>桌宠为什么显示空白或 127.0.0.1 拒绝连接？</summary><div class="faq-answer">桌宠页面由主程序启动的本地服务提供。请从主程序打开桌宠，并等待服务健康检查完成；不要在主程序退出后单独复用旧页面。仍失败时查看 server.log。</div></details>
+        <details><summary>退出桌宠后为什么还保留 CEF 线程？</summary><div class="faq-answer">CEF Browser 和消息循环需要保留在初始化它的线程。用户“退出桌宠”时隐藏窗口并让引擎待命，整个应用退出时才彻底销毁，以确保之后能稳定重新打开。</div></details>
+        <details><summary>可以上传自己的 VRM 吗？</summary><div class="faq-answer">可以，主窗口支持最大 100 MiB 的 <code>.vrm</code> 文件，并同步给桌宠。不同模型支持的表情和骨骼并不相同，因此部分 VRMA 或 BlendShape 可能表现不一致。</div></details>
+        <details><summary>宽高调整和模型缩放有什么区别？</summary><div class="faq-answer">宽高调整改变透明桌宠舞台和原生窗口范围，不直接修改模型缩放。非正方形舞台会改变相机画幅，因此视觉构图仍可能发生变化。</div></details>
+        <details><summary>主窗口关闭后程序为什么还在运行？</summary><div class="faq-answer">这是设计行为：关闭主窗口会最小化到系统托盘并保留桌宠。请从托盘选择“退出”才能结束主程序、本地服务和 CEF 桌宠。</div></details>
+        <details><summary>角色、历史和记忆保存在哪里？</summary><div class="faq-answer">默认位于 <code>%LOCALAPPDATA%\VirtualCompanion</code>。升级和普通卸载不会主动删除；需要完全清理时请先退出应用并自行备份。</div></details>
+        <details><summary>延迟一定是 800ms 吗？</summary><div class="faq-answer">页面以 800ms 表达当前端到端体验指标，但真实延迟仍会受到录音分段、网络、LLM 首 token、TTS 服务和设备性能影响。</div></details>
+      </div>
+    </div></section>
+  </main><footer class="footer"><div class="container"><div class="footer-main"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../docs.html">文档中心</a><a href="quickstart.html">快速开始</a><a href="api.html">API</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>FAQ</span></div></div></footer><script src="../../js/main.js" defer></script>
+</body></html>

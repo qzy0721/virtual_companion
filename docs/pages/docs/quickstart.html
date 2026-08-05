@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc"><title>快速开始｜虚拟陪伴文档</title><meta name="description" content="虚拟陪伴从安装到第一次对话和桌宠体验的完整快速开始。"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../css/style.css">
+</head><body>
+  <header class="nav"><div class="nav-inner"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../../index.html#details">细节</a><a class="active" href="../docs.html">文档</a><a href="../about.html">关于</a><a href="../download.html">下载</a></nav><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main><header class="page-header container"><div class="section-label">Quickstart</div><h1 class="h1">快速开始</h1><p>先完成一轮文字对话，再按需打开声音和桌宠。这样最容易判断每一层是否正常。</p></header>
+    <section class="page-section"><div class="container doc-layout">
+      <aside class="doc-sidebar"><strong>本页目录</strong><a href="#prepare">准备</a><a href="#install">安装</a><a href="#configure">配置</a><a href="#first-chat">第一次对话</a><a href="#voice">开启语音</a><a href="#pet">打开桌宠</a><a href="#next">下一步</a></aside>
+      <article class="prose doc-content">
+        <h2 id="prepare">开始前准备</h2><p>需要 Windows 10/11 x64、网络连接，以及你自己的 LLM 和 DashScope 凭据。安装包已包含本地 Python 服务与 .NET 桌面运行文件。</p>
+        <div class="callout">最小可用路径：只配置 LLM 即可先验证文字对话；DashScope 用于实时 ASR 和两种 TTS 链路。</div>
+        <h2 id="install">安装应用</h2><div class="step-list">
+          <div class="step"><h3>下载安装包</h3><p>从下载页获取 <code>VirtualCompanion-Setup-0.2.0.exe</code>，建议核对 SHA256。</p></div>
+          <div class="step"><h3>运行安装程序</h3><p>默认安装到 <code>%LOCALAPPDATA%\Programs\VirtualCompanion</code>，不要求管理员权限。</p></div>
+          <div class="step"><h3>第一次启动</h3><p>桌面壳会启动本地 FastAPI 服务，健康检查通过后再显示主页面。</p></div>
+        </div>
+        <h2 id="configure">完成首次配置</h2><p>首启向导包含以下字段：</p>
+        <div class="table-wrap"><table><thead><tr><th>字段</th><th>是否必需</th><th>用途</th></tr></thead><tbody><tr><td>LLM API Key / URL / Model</td><td>文字对话必需</td><td>调用 OpenAI 兼容的对话模型</td></tr><tr><td>DashScope API Key</td><td>语音能力必需</td><td>ASR、Qwen3-TTS 与 CosyVoice</td></tr><tr><td>Workspace ID</td><td>按账户情况</td><td>使用业务空间专属配置时填写</td></tr><tr><td>OSS 配置</td><td>仅 CosyVoice</td><td>托管声音复刻的公网参考音频</td></tr></tbody></table></div>
+        <p>跳过向导也能进入应用，之后可在“服务设置”补充。密钥状态只以是否配置和掩码提示返回页面，不在设置接口响应中回传原值。</p>
+        <h2 id="first-chat">完成第一次文字对话</h2><ol><li>在左侧角色列表选择默认角色。</li><li>在底部输入框输入消息并发送。</li><li>确认回复文字逐步出现，而不是等待完整内容一次性返回。</li><li>对话完成后刷新页面，检查历史是否仍存在。</li></ol>
+        <h2 id="voice">开启语音</h2><p>点击“语音”进行一次识别，或点击“对话模式”进入自动监听。浏览器请求麦克风权限时选择允许。角色未注册音色时仍可正常文字聊天，只是不播放 TTS。</p>
+        <div class="callout warning">桌宠页面与主窗口是两个浏览器环境。第一次分别使用麦克风时，权限行为可能不同；应用仅对本机回环地址放行麦克风。</div>
+        <h2 id="pet">打开桌宠</h2><ol><li>在左侧工具区点击“弹出桌宠”。</li><li>等待 VRM 和动作资源加载完成。</li><li>拖动顶部半透明条移动，右键 3D 舞台打开菜单。</li><li>从右键菜单启动连续对话、恢复主窗口或退出桌宠。</li><li>在设置页分别调整舞台宽度、高度与默认待机动作。</li></ol>
+        <h2 id="next">下一步</h2><p>继续阅读<a href="installation.html">安装与升级</a>了解数据保留，阅读<a href="faq.html">FAQ</a>排查问题；需要二次开发时查看<a href="api.html">API</a>和<a href="development.html">开发文档</a>。</p>
+      </article>
+    </div></section>
+  </main><footer class="footer"><div class="container"><div class="footer-main"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../docs.html">文档中心</a><a href="../download.html">下载</a><a href="../about.html">关于</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>快速开始</span></div></div></footer><script src="../../js/main.js" defer></script>
+</body></html>

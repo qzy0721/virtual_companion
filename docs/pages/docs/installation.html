@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc"><title>安装与升级｜虚拟陪伴文档</title><meta name="description" content="虚拟陪伴 Windows 安装、升级、卸载、数据目录和 WebView2 说明。"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../css/style.css">
+</head><body>
+  <header class="nav"><div class="nav-inner"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../../index.html#details">细节</a><a class="active" href="../docs.html">文档</a><a href="../about.html">关于</a><a href="../download.html">下载</a></nav><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main><header class="page-header container"><div class="section-label">Installation</div><h1 class="h1">安装与升级</h1><p>桌面版按当前用户安装，应用文件与用户数据分开保存，升级不会覆盖角色和历史。</p></header>
+    <section class="page-section"><div class="container doc-layout">
+      <aside class="doc-sidebar"><strong>本页目录</strong><a href="#requirements">系统要求</a><a href="#install">安装步骤</a><a href="#webview">WebView2</a><a href="#paths">目录结构</a><a href="#upgrade">升级</a><a href="#uninstall">卸载</a><a href="#verify">校验</a></aside>
+      <article class="prose doc-content">
+        <h2 id="requirements">系统要求</h2><div class="table-wrap"><table><tbody><tr><td>操作系统</td><td>Windows 10 / 11 x64</td></tr><tr><td>浏览器运行时</td><td>Microsoft Edge WebView2 Evergreen Runtime</td></tr><tr><td>网络</td><td>访问所配置 LLM、DashScope 和可选 OSS</td></tr><tr><td>权限</td><td>普通用户安装；语音功能需要麦克风权限</td></tr><tr><td>磁盘</td><td>建议至少预留 700 MiB，另加模型、音频和历史空间</td></tr></tbody></table></div>
+        <h2 id="install">安装步骤</h2><ol><li>下载当前安装包并核对文件哈希。</li><li>双击安装程序。未签名版本可能触发 SmartScreen，确认文件来源和哈希后再决定是否继续。</li><li>选择安装路径或使用默认路径。</li><li>启动“虚拟陪伴”，在首启向导中配置 API。</li></ol>
+        <h2 id="webview">WebView2 Runtime</h2><p>主窗口使用 WinForms + WebView2。Windows 11 通常已经包含 Evergreen Runtime；如果缺失，桌面壳会显示安装入口。安装 WebView2 后重新启动应用即可。</p>
+        <div class="callout">WebView2 只承载主窗口。透明桌宠使用独立 CEF OSR 渲染，两者都访问同一个本地 FastAPI 服务。</div>
+        <h2 id="paths">程序与数据目录</h2><h3>程序文件</h3><pre><code>%LOCALAPPDATA%\Programs\VirtualCompanion</code></pre><h3>用户数据</h3><pre><code>%LOCALAPPDATA%\VirtualCompanion
+├─ .env                 API 与服务配置
+├─ backend\data         角色、历史与记忆
+├─ prompts              可编辑提示词
+├─ reference_audio      参考音频
+├─ pet_models           桌宠当前自定义模型
+├─ logs\server.log      本地服务日志
+└─ WebView2             主窗口浏览器数据</code></pre>
+        <h2 id="upgrade">升级</h2><p>直接运行新版安装包覆盖程序目录。用户数据位于独立目录，正常升级不会删除。涉及配置格式变化时，应用会尽量兼容旧字段，例如旧桌宠正方形 <code>size</code> 会迁移成独立宽度和高度。</p>
+        <h2 id="uninstall">卸载</h2><p>卸载只移除程序文件，默认保留用户数据。如果希望完全清理，请先退出应用并备份需要的数据，再手动处理 <code>%LOCALAPPDATA%\VirtualCompanion</code>。</p>
+        <h2 id="verify">安装包校验</h2><pre><code>Get-FileHash -Algorithm SHA256 .\VirtualCompanion-Setup-0.2.0.exe</code></pre><p>当前 v0.2.0 的 SHA256 为：</p><pre><code>EC15E153F4D4B2278FF24BE32F104E72F303B1F2B27006E47F9F17F49F22C85A</code></pre>
+      </article>
+    </div></section>
+  </main><footer class="footer"><div class="container"><div class="footer-main"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../docs.html">文档中心</a><a href="../download.html">下载</a><a href="faq.html">FAQ</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>安装文档</span></div></div></footer><script src="../../js/main.js" defer></script>
+</body></html>

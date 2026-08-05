@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh-CN"><head>
+  <meta charset="utf-8"><script>document.documentElement.classList.add('js')</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#fbf9fc"><title>开发文档｜虚拟陪伴</title><meta name="description" content="虚拟陪伴架构、数据流、本地开发、目录、构建与扩展说明。"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../css/style.css">
+</head><body>
+  <header class="nav"><div class="nav-inner"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="nav-links" id="nav-links"><a href="../../index.html#details">细节</a><a class="active" href="../docs.html">文档</a><a href="../about.html">关于</a><a href="../download.html">下载</a></nav><button class="nav-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="nav-links"><span></span><span></span><span></span></button></div></header>
+  <main><header class="page-header container"><div class="section-label">Development</div><h1 class="h1">开发文档</h1><p>项目由 Windows 桌面主控、本地 Python 服务、Vue/Three.js 主页面和独立 CEF 桌宠组成。</p></header>
+    <section class="page-section"><div class="container doc-layout">
+      <aside class="doc-sidebar"><strong>本页目录</strong><a href="#architecture">架构</a><a href="#flow">对话数据流</a><a href="#pet">桌宠链路</a><a href="#folders">目录</a><a href="#run">本地运行</a><a href="#build">构建发布</a><a href="#data">数据与线程</a><a href="#extend">扩展建议</a></aside>
+      <article class="prose doc-content">
+        <h2 id="architecture">运行架构</h2><pre><code>VirtualCompanion.exe (WinForms 主控)
+├─ 选择本地端口并启动 Python sidecar
+├─ WebView2 → http://127.0.0.1:&lt;port&gt;/app/
+├─ 系统托盘、单实例、窗口与服务重启
+└─ shell command long polling
+
+VirtualCompanion.Server.exe / app_launcher.py
+├─ FastAPI routers + services
+├─ Vue 静态资源
+├─ JSON / 音频 / 配置持久化
+└─ CEF OSR 桌宠线程 → Win32 分层窗口</code></pre>
+        <p>主窗口和桌宠不是两个后端实例。它们通过同源 HTTP 接口共享角色、模型、偏好与对话服务。</p>
+        <h2 id="flow">一轮对话的数据流</h2><ol><li>输入框或 ASR 得到用户文本。</li><li><code>POST /api/chat</code> 通过 SSE 返回 delta 与完整句子。</li><li>句子立即进入 <code>/api/tts</code> 队列，并进行快速表情动作分析。</li><li>音频播放时使用幅度驱动 VRM 口型，按句应用表情和 VRMA。</li><li>done 事件确认完整回复并持久化历史，完整分析结果可以修正后续表现。</li></ol>
+        <div class="callout">流式生成、句级 TTS 和播放彼此重叠，避免等待完整回复、完整合成后才开始说话。这是 800ms 体验指标的主要工程基础。</div>
+        <h2 id="pet">CEF 桌宠链路</h2><p><code>PetService</code> 在守护线程中创建 <code>TransparentPetWindow</code>。CEF 通过 OSR 回调产生 BGRA 帧，Win32 <code>UpdateLayeredWindow</code> 将其合成到透明窗口。后端用线程安全 JS 队列执行 <code>window.receiveFromMain(...)</code>。</p><p>用户退出桌宠时只隐藏窗口并保留 CEF 线程。CEF 的 Browser 和消息循环必须继续位于初始化线程，整个应用退出时才真正销毁。</p>
+        <h2 id="folders">目录职责</h2><div class="table-wrap"><table><tbody><tr><td><code>backend/</code></td><td>FastAPI 路由、服务编排、模型与本地持久化</td></tr><tr><td><code>web/</code></td><td>Vue 3 主界面、设置、角色管理、Three.js VRM 舞台与桌宠页面</td></tr><tr><td><code>desktop/</code></td><td>WinForms + WebView2 主控、托盘、窗口和 sidecar 生命周期</td></tr><tr><td><code>packaging/</code></td><td>PyInstaller spec 与 Inno Setup 安装定义</td></tr><tr><td><code>scripts/</code></td><td>开发启动、one-folder 与安装包构建脚本</td></tr><tr><td><code>prompts/</code></td><td>角色生成、长期记忆与情感分析提示词</td></tr><tr><td><code>reference_audio/</code></td><td>默认声音复刻参考音频</td></tr></tbody></table></div>
+        <h2 id="run">本地运行</h2><p>环境：Windows、Python 3.11、Node.js 18+。构建桌面壳还需要 .NET 8 SDK。</p><pre><code>conda create -n VirtualCompanion python=3.11 -y
+conda activate VirtualCompanion
+pip install -r requirements.txt
+
+cd web
+npm install
+npm run build
+cd ..
+
+Copy-Item .env.example .env
+.\scripts\quickstart.ps1</code></pre><p>服务端口由 <code>APP_PORT</code> 决定；留空时从 8000 起选择可用端口。运行中的 Swagger 位于 <code>/docs</code>。</p>
+        <h2 id="build">构建与发布</h2><pre><code># one-folder
+.\scripts\build_package.ps1
+
+# 安装包
+.\scripts\build_installer.ps1 -AppVersion 0.2.0 -RebuildApplication</code></pre><p>one-folder 输出为 <code>dist/VirtualCompanion</code>，安装包输出到 <code>dist/installer</code>。公开发布前应加入 Authenticode 签名、时间戳和稳定 Release 下载地址。</p>
+        <h2 id="data">数据与并发边界</h2><ul><li>当前是单机单用户模型，角色、历史和记忆使用 JSON 持久化。</li><li>历史写入和关键配置使用锁或临时文件替换，避免中途写坏。</li><li>TTS 串行化以规避云端 WebSocket 并发冲突。</li><li>CEF 窗口调用通过队列回到所属线程；不能随意销毁后从另一线程重建。</li><li>设置保存后 sidecar 以退出码 75 请求桌面壳重启服务。</li></ul>
+        <h2 id="extend">适合继续扩展的方向</h2><ul><li>角色与 VRM、舞台、待机动作和模型构图的统一绑定。</li><li>服务自检、首次使用引导与更清晰的对话状态机。</li><li>多显示器、DPI、窗口位置恢复与桌宠行为池。</li><li>为 API 增加明确的版本前缀前，需要先评估当前前端和桌面壳调用兼容。</li></ul>
+      </article>
+    </div></section>
+  </main><footer class="footer"><div class="container"><div class="footer-main"><a href="../../index.html" class="nav-logo"><span class="nav-logo-mark">VC</span><span>虚拟陪伴</span></a><nav class="footer-links"><a href="../docs.html">文档中心</a><a href="api.html">API</a><a href="faq.html">FAQ</a></nav></div><div class="footer-bottom"><span>© 2026 Virtual Companion Project</span><span>开发文档</span></div></div></footer><script src="../../js/main.js" defer></script>
+</body></html>
