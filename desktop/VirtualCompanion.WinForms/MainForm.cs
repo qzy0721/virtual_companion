@@ -38,7 +38,7 @@ internal sealed class MainForm : Form
     private readonly Panel _statusPanel = new() { Dock = DockStyle.Fill };
     private readonly LoadingIcon _iconBox;
     private readonly LoadingTitle _titleBox = new();
-    private readonly LoadingCaption _copyrightLabel = new("Copyright © 2026 上海市彦瑞科技有限公司");
+    private readonly LoadingCaption _copyrightLabel = new("Copyright © 2026 Qiuzey143857@outlook.com");
     private readonly LoadingLabel _statusLabel = new()
     {
         // 灰色小字状态提示（略深于版权行，保证可见）。
