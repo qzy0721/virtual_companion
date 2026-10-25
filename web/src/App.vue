@@ -115,6 +115,7 @@ const asr = useAsrStream({
   },
   onSpeechStart: () => convApi?.onSpeechStart(),
   onSpeechEnd: (event) => convApi?.onSpeechEnd(event),
+  onTranscript: (payload) => convApi?.onTranscript(payload),
 })
 
 const conv = useConversationMode({

@@ -36,6 +36,7 @@ const asr = useAsrStream({
   onError: (message) => conversationApi?.onAsrError(message),
   onSpeechStart: () => conversationApi?.onSpeechStart(),
   onSpeechEnd: (event) => conversationApi?.onSpeechEnd(event),
+  onTranscript: (payload) => conversationApi?.onTranscript(payload),
 })
 
 function notify(message) {

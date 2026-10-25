@@ -1,6 +1,8 @@
 import { computed, ref } from 'vue'
 import { apiUrl } from '../api'
 
+const DUCK_VOLUME = 0.18
+
 export function useTtsQueue(stageRef) {
   const status = ref('就绪')
   const queueLength = ref(0)
@@ -9,6 +11,9 @@ export function useTtsQueue(stageRef) {
   const pendingCount = ref(0)
   // 被用户打断后，队列保持在当前位置；resume 可以从暂停点继续。
   const suspended = ref(false)
+  // 疑似打断时先压低音量、等 ASR 确认后再暂停，避免噪声误打断。
+  const ducked = ref(false)
+  const currentText = ref('')
   let audioContext = null
   let analyser = null
   let analyserConnected = false
@@ -137,6 +142,7 @@ export function useTtsQueue(stageRef) {
 
     playing.value = true
     currentItem = audioQueue.shift()
+    currentText.value = currentItem.text
     updateQueueLength()
     if (currentItem.expression) stage()?.setExpression(currentItem.expression, currentItem.intensity)
     if (currentItem.action && currentItem.action !== 'none') stage()?.playAction(currentItem.action)
@@ -145,6 +151,7 @@ export function useTtsQueue(stageRef) {
     status.value = `播放 ${currentItem.index + 1}`
     const audio = new Audio(currentItem.url)
     audio.crossOrigin = 'anonymous'
+    audio.volume = ducked.value ? DUCK_VOLUME : 1
     currentAudio = audio
 
     if (audioContext && analyser) {
@@ -168,6 +175,7 @@ export function useTtsQueue(stageRef) {
       currentSource = null
       currentAudio = null
       if (currentItem === playingItem) currentItem = null
+      currentText.value = ''
       stage()?.setMouthOpen(0)
       stage()?.clearExpression()
       stage()?.stopAction()
@@ -202,11 +210,28 @@ export function useTtsQueue(stageRef) {
     }
   }
 
+  // 疑似打断：先压低 TTS 音量；ASR 确认真实语音后再 interrupt 暂停。
+  function duck() {
+    if (suspended.value || !currentAudio || currentAudio.paused) return false
+    if (!ducked.value) {
+      ducked.value = true
+      currentAudio.volume = DUCK_VOLUME
+    }
+    return true
+  }
+
+  function unduck() {
+    if (!ducked.value) return
+    ducked.value = false
+    if (currentAudio) currentAudio.volume = 1
+  }
+
   // 打断：立刻静音并保留当前句的播放位置和后续队列，等待“继续”。
   // 即使还没有音频（角色仍在思考），也会进入暂停态，避免新一轮生成突然开口。
   function interrupt() {
     const hasWork = playing.value || pendingCount.value > 0 || Boolean(currentItem)
     if (suspended.value) return hasWork
+    unduck()
     suspended.value = true
     if (currentAudio) {
       try { currentAudio.pause() } catch {}
@@ -222,6 +247,7 @@ export function useTtsQueue(stageRef) {
   async function resume() {
     if (!suspended.value) return false
     await ensureAudioReady()
+    unduck()
     suspended.value = false
     if (currentAudio && currentItem) {
       try {
@@ -242,6 +268,7 @@ export function useTtsQueue(stageRef) {
   function stop() {
     generation += 1
     suspended.value = false
+    unduck()
     stopMouthLoop()
     currentAudio?.pause()
     if (currentAudio) currentAudio.currentTime = 0
@@ -249,6 +276,7 @@ export function useTtsQueue(stageRef) {
     currentAudio = null
     currentSource = null
     currentItem = null
+    currentText.value = ''
     audioQueue = []
     pending = []
     inFlight = []
@@ -278,9 +306,13 @@ export function useTtsQueue(stageRef) {
     pendingCount,
     active,
     suspended,
+    ducked,
+    currentText,
     ensureAudioReady,
     enqueue,
     patch,
+    duck,
+    unduck,
     interrupt,
     resume,
     stop,

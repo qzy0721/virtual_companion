@@ -39,12 +39,12 @@ async function acquireMicrophone() {
     noiseSuppression: true,
     autoGainControl: true,
   }
-  // Chrome/Edge 的 system AEC 会参考系统输出，对扬声器外放更有效；
-  // 不支持该约束的浏览器会忽略或回退到默认 AEC。
+  // 浏览器 AEC 默认用 WebRTC 的 browser 实现；system AEC 在部分 Windows
+  // 声卡上反而会放行更多扬声器残留，因此只作为最后回退。
   const attempts = [
-    { ...base, echoCancellationType: 'system' },
-    { ...base, echoCancellationType: 'browser' },
     base,
+    { ...base, echoCancellationType: 'browser' },
+    { ...base, echoCancellationType: 'system' },
   ]
   let lastError = null
   for (const audio of attempts) {
@@ -70,6 +70,7 @@ export function useAsrStream({
   onError,
   onSpeechStart,
   onSpeechEnd,
+  onTranscript,
   vadOptions,
 } = {}) {
   const mode = ref('idle')
@@ -222,11 +223,13 @@ export function useAsrStream({
         partialText = message.text || ''
         status.value = '正在识别...'
         updateDraft()
+        onTranscript?.({ text: transcript(), partial: partialText, final: false })
       } else if (message.type === 'final') {
         const text = (message.text || '').trim()
         if (text) finalSegments.push(text)
         partialText = ''
         updateDraft()
+        onTranscript?.({ text: transcript(), partial: '', final: true })
       } else if (message.type === 'done') {
         if (!currentTurn || mode.value === 'idle' || mode.value === 'monitoring') return
         const serverText = (message.text || '').trim()

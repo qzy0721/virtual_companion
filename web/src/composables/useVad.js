@@ -8,14 +8,15 @@ const DEFAULTS = {
   sustainRms: 0.0055,
   noiseStartRatio: 2.6,
   noiseSustainRatio: 1.8,
-  bargeStartRms: 0.013,
-  bargeStartRatio: 3.4,
+  bargeStartRms: 0.014,
+  bargeStartRatio: 3.2,
   startFrames: 3,
   bargeStartFrames: 5,
   silenceMs: 520,
   maxSpeechMs: 20000,
   noiseFloorMin: 0.0012,
   noiseFloorMax: 0.045,
+  smoothFrames: 3,
 }
 
 function clamp(value, min, max) {
@@ -32,6 +33,7 @@ export class VoiceActivityDetector {
     this.silenceMs = 0
     this.noiseFloor = 0.002
     this.lastRms = 0
+    this.energyHistory = []
   }
 
   setBargeMode(enabled) {
@@ -44,32 +46,38 @@ export class VoiceActivityDetector {
     this.speechMs = 0
     this.silenceMs = 0
     this.lastRms = 0
+    this.energyHistory = []
   }
 
   push(rms) {
     const value = Number.isFinite(rms) ? Math.max(0, rms) : 0
     this.lastRms = value
+    this.energyHistory.push(value)
+    if (this.energyHistory.length > this.options.smoothFrames) this.energyHistory.shift()
+    // 3 帧移动平均：语音中的自然能量低谷不会把确认计数清零，
+    // 单个爆音也只能抬高平均值的 1/3，不容易骗过 VAD。
+    const smoothed = this.energyHistory.reduce((total, item) => total + item, 0) / this.energyHistory.length
     const frameMs = this.options.frameMs
 
     if (!this.speaking) {
       // 未说话时缓慢跟踪环境噪声：变安静时快、变吵时慢，避免空调/风扇把门限抬高。
-      const alpha = value < this.noiseFloor ? 0.12 : 0.015
+      const alpha = smoothed < this.noiseFloor ? 0.12 : 0.015
       this.noiseFloor = clamp(
-        this.noiseFloor + (value - this.noiseFloor) * alpha,
+        this.noiseFloor + (smoothed - this.noiseFloor) * alpha,
         this.options.noiseFloorMin,
         this.options.noiseFloorMax,
       )
       const startGate = this.bargeMode
         ? Math.max(this.options.bargeStartRms, this.noiseFloor * this.options.bargeStartRatio)
         : Math.max(this.options.startRms, this.noiseFloor * this.options.noiseStartRatio)
-      if (value >= startGate) {
+      if (smoothed >= startGate) {
         this.speechRun += 1
         this.silenceMs = 0
         const needed = this.bargeMode ? this.options.bargeStartFrames : this.options.startFrames
         if (this.speechRun >= needed) {
           this.speaking = true
           this.speechMs = this.speechRun * frameMs
-          return { type: 'speech-start', rms: value, speechMs: this.speechMs }
+          return { type: 'speech-start', rms: smoothed, speechMs: this.speechMs }
         }
       } else {
         this.speechRun = 0
@@ -83,7 +91,7 @@ export class VoiceActivityDetector {
       this.noiseFloor * this.options.noiseSustainRatio,
     )
     this.speechMs += frameMs
-    if (value >= sustainGate) this.silenceMs = 0
+    if (smoothed >= sustainGate) this.silenceMs = 0
     else this.silenceMs += frameMs
 
     if (this.silenceMs >= this.options.silenceMs || this.speechMs >= this.options.maxSpeechMs) {
@@ -91,13 +99,14 @@ export class VoiceActivityDetector {
         type: 'speech-end',
         speechMs: this.speechMs,
         silenceMs: this.silenceMs,
-        rms: value,
+        rms: smoothed,
         forced: this.speechMs >= this.options.maxSpeechMs,
       }
       this.speaking = false
       this.speechRun = 0
       this.speechMs = 0
       this.silenceMs = 0
+      this.energyHistory = []
       return event
     }
     return null
