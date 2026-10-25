@@ -20,6 +20,7 @@ dist-*/
 !web/public/assets/胡桃.vrm
 !web/public/assets/animations/
 !web/public/assets/animations/*.vrma
+!reference_audio/default.wav
 \v0
 sourcecode
 sourcecode.zip
@@ -28,3 +29,4 @@ sourcecode.zip
 AGENT.md
 docs_forpaper
 backend/data/*.sqlite3*
+essay_build
