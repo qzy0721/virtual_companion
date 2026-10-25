@@ -1,1 +1,1 @@
-Start-Process -FilePath "D:/Anaconda/envs/virtual_accompany/python.exe" -ArgumentList "e:/Dev/child_accompany_sys/backend/main.py" 
+Start-Process -FilePath "D:/Anaconda/envs/virtual_accompany/python.exe" -ArgumentList "E:\Dev\virtual_companion\backend\main.py" 
