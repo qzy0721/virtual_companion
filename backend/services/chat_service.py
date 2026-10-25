@@ -13,6 +13,7 @@ from config import MAX_BUFFER_LENGTH
 from api import LLM_ERROR_PREFIX, call_qwen_stream
 from MemoryGenerate import MemoryGenerate
 from PromptOptimizer import PromptOptimizer
+from backend.services.history_projection import AssistantSpeechProjection, LEGACY_PLAYBACK_ANNOTATION
 
 
 class ChatService:
@@ -36,6 +37,7 @@ class ChatService:
         role_name: str,
         user_message: str,
         history: Optional[list] = None,
+        memory_context: Optional[str] = None,
     ) -> AsyncGenerator[Tuple[str, str], None]:
         """
         流式对话：LLM 生成文本 + 分句 TTS 合成。
@@ -44,6 +46,7 @@ class ChatService:
             role_name:     角色名称
             user_message:  用户消息
             history:       历史消息列表（可选）
+            memory_context: 角色级交互证据上下文（HTTP 路由提供）
 
         Yields:
             (event_type, data) 元组:
@@ -59,16 +62,24 @@ class ChatService:
             yield ("error", f"角色 '{role_name}' 不存在")
             return
 
-        # 2. 加载长期记忆
-        try:
-            memories = self.memory.get_memories(limit=5)
-            if memories:
-                memory_text = "\n\n【长期记忆】\n" + "\n".join(
-                    f"- {m['content']}" for m in memories
-                )
-                system_prompt += memory_text
-        except Exception as e:
-            print(f"⚠️ 加载记忆失败: {e}")
+        # 2. 记忆：HTTP 路由传入角色级证据上下文；非 HTTP 调用保留旧摘要回退。
+        if memory_context is not None:
+            system_prompt += (
+                "\n\n【交互证据使用规则】当前用户明确的修正优先于过去记录。"
+                "用户陈述只表示用户曾这样说；助手建议和未决内容不代表双方同意。"
+                "仅对有接受证据的内容使用‘我们约定过’等表述；"
+                "不把一次事件升级为永久偏好或能力评价。\n" + memory_context
+            )
+        else:
+            try:
+                memories = self.memory.get_memories(limit=5)
+                if memories:
+                    memory_text = "\n\n【长期记忆】\n" + "\n".join(
+                        f"- {m['content']}" for m in memories
+                    )
+                    system_prompt += memory_text
+            except Exception as e:
+                print(f"⚠️ 加载记忆失败: {e}")
 
         # 3. 构建消息列表
         messages = [{"role": "system", "content": system_prompt}]
@@ -79,6 +90,9 @@ class ChatService:
         # 5. LLM 流式生成 + 分句检测
         full_response = ""
         buffer = ""
+        speech_projection = AssistantSpeechProjection(
+            preserve_annotation=LEGACY_PLAYBACK_ANNOTATION in user_message
+        )
 
         # 将同步生成器包装为异步
         async_gen = self._async_wrap_qwen(messages)
@@ -90,6 +104,7 @@ class ChatService:
 
             # 过滤不可打印字符
             clean = ''.join(c for c in chunk if c.isprintable() or c in '\n')
+            clean = speech_projection.feed(clean)
             if not clean:
                 continue
 
@@ -104,6 +119,13 @@ class ChatService:
                 cleaned = self._clean_for_tts(sentence)
                 if cleaned:
                     yield ("sentence", cleaned)
+
+        # 不完整的保留标记在流结束后原样释放。
+        tail = speech_projection.finish()
+        if tail:
+            full_response += tail
+            buffer += tail
+            yield ("delta", tail)
 
         # 6. 推送最终文本
         if full_response:

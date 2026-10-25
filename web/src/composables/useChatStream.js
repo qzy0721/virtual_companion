@@ -36,7 +36,7 @@ export function useChatStream() {
     sending.value = false
   }
 
-  async function send({ roleName, message, onStart, onDelta, onText, onSentence, onDone, onError }) {
+  async function send({ roleName, message, turnId, sessionId, resumeFrom, onStart, onMeta, onDelta, onText, onSentence, onDone, onError }) {
     if (!roleName || !message || sending.value) return false
 
     const id = ++requestId
@@ -48,7 +48,13 @@ export function useChatStream() {
       const response = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-        body: JSON.stringify({ role_name: roleName, message }),
+        body: JSON.stringify({
+          role_name: roleName,
+          message,
+          ...(turnId ? { turn_id: turnId } : {}),
+          ...(sessionId ? { session_id: sessionId } : {}),
+          ...(resumeFrom ? { resume_from: resumeFrom } : {}),
+        }),
         signal: controller.signal,
       })
       if (!response.ok || !response.body) throw new Error('对话服务暂不可用')
@@ -77,9 +83,10 @@ export function useChatStream() {
           if (!line.startsWith('data: ')) continue
           try {
             const payload = JSON.parse(line.slice(6))
+            if (eventType === 'meta') onMeta?.(payload.data)
             if (eventType === 'delta') await renderOnNextFrame(onDelta, payload.data)
             if (eventType === 'text') await onText?.(payload.data)
-            if (eventType === 'sentence') await onSentence?.(payload.data)
+            if (eventType === 'sentence') await onSentence?.(payload.data, payload)
             if (eventType === 'done') await onDone?.(payload.data)
             if (eventType === 'error') await onError?.(payload.data)
           } catch {

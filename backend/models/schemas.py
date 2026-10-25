@@ -55,6 +55,26 @@ class ChatRequest(BaseModel):
     """对话请求"""
     role_name: str = Field(..., description="角色名称")
     message: str = Field(..., min_length=1, description="用户消息")
+    turn_id: Optional[str] = Field(default=None, max_length=160, pattern=r"^[A-Za-z0-9_.:-]+$")
+    session_id: str = Field(default="", max_length=160)
+    resume_from: Optional[str] = Field(
+        default=None, min_length=1, max_length=160, pattern=r"^[A-Za-z0-9_.:-]+$",
+        description="同角色、同会话的续接来源 turn_id；message 仅作传输占位",
+    )
+
+
+class PresentationReceipt(BaseModel):
+    event_id: str = Field(..., min_length=1, max_length=200)
+    segment_ids: List[str] = Field(..., min_length=1, max_length=64)
+    channel: str = Field(..., pattern="^(audio|text)$")
+    state: str = Field(..., pattern="^(started|completed|interrupted|failed|displayed)$")
+    played_ms: Optional[float] = Field(default=None, ge=0, le=3_600_000)
+
+
+class PresentationRequest(BaseModel):
+    role_name: str = Field(..., min_length=1, max_length=100)
+    turn_id: str = Field(..., min_length=1, max_length=160)
+    receipts: List[PresentationReceipt] = Field(..., min_length=1, max_length=64)
 
 
 class ChatStreamEvent(BaseModel):

@@ -156,12 +156,19 @@ from backend.routers import roles, chat, asr, tts, history, memory, settings, pe
 async def lifespan(app: FastAPI):
     """应用生命周期：启动时初始化，关闭时清理"""
     _init_startup()
-    print('[INIT] initialization completed')
-    yield
-    # 桌宠拥有独立的 CEF/Win32 消息循环，服务退出前必须显式释放。
-    from backend.services.pet_service import get_pet_service
+    from backend.services.interaction_tasks import get_memory_reconciler
 
-    get_pet_service().shutdown()
+    reconciler = get_memory_reconciler()
+    await reconciler.recover()
+    print('[INIT] initialization completed')
+    try:
+        yield
+    finally:
+        await reconciler.shutdown()
+        # 桌宠拥有独立的 CEF/Win32 消息循环，服务退出前必须显式释放。
+        from backend.services.pet_service import get_pet_service
+
+        get_pet_service().shutdown()
 
 app = FastAPI(
     lifespan=lifespan,

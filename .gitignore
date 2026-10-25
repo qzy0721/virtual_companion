@@ -27,3 +27,4 @@ sourcecode.zip
 .zcode
 AGENT.md
 docs_forpaper
+backend/data/*.sqlite3*

@@ -1,107 +1,142 @@
-# -*- coding: UTF-8 -*-
-"""
-对话 API 路由（SSE 流式）。
-"""
-
-import os
+"""Streaming dialogue with independent input and presentation evidence."""
+import asyncio
 import json
+import uuid
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from backend.models.schemas import ChatRequest, ExpressionRequest, ExpressionResponse
+from backend.models.schemas import ChatRequest, ExpressionRequest, ExpressionResponse, PresentationRequest
 from backend.services.chat_service import get_chat_service
 from backend.services.expression_service import get_expression_service
-from backend.routers.history import _load as load_history, append_turn, _save as save_history
+from backend.services.interaction_store import get_interaction_store
+from backend.services.continuation_service import ContinuationService
+from backend.services.evidence_memory import get_evidence_memory
+from backend.services.interaction_tasks import get_memory_reconciler
+from backend.routers.history import _load as load_history, clear_history_data
+from PromptOptimizer import PromptOptimizer
 from config import MAX_HISTORY
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 
+def encode_event(kind, data, **identity):
+    payload = dict(type=kind, data=data, **identity)
+    return f"event: {kind}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+
 @router.post("")
 async def chat(request: ChatRequest):
-    """
-    发送消息，流式返回 LLM 文本 + TTS 音频。
+    role_prompt = PromptOptimizer.get_prompt_by_role(request.role_name)
+    if not role_prompt:
+        raise HTTPException(404, "角色不存在，请重新选择角色")
+    store = get_interaction_store()
+    turn_id = request.turn_id or uuid.uuid4().hex
+    continuation = None
+    try:
+        if request.resume_from is not None:
+            continuation = ContinuationService(store).start(
+                request.role_name, request.resume_from, turn_id, request.session_id)
+            turn = continuation["turn"]
+        else:
+            # Input survives provider errors and disconnects before a single token.
+            turn = store.start_turn(request.role_name, request.message, turn_id, request.session_id, require_new=True)
+    except ValueError as error:
+        raise HTTPException(409, str(error)) from error
+    if turn["status"] != "generating":
+        raise HTTPException(409, "这次对话已结束，请使用新的轮次重试")
 
-    响应格式: Server-Sent Events (SSE)
-      事件类型:
-        - "delta" : JSON { "type": "delta", "data": "增量文本..." }
-        - "text"  : JSON { "type": "text", "data": "完整回复文本" }
-        - "sentence" : JSON { "type": "sentence", "data": "完整句子" }
-        - "done"  : JSON { "type": "done", "data": "完整回复文本" }
-        - "error" : JSON { "type": "error", "data": "错误信息" }
-    """
-    service = get_chat_service()
+    from backend.services.history_projection import combine_dialogue_contexts, dialogue_context, presentation_context
+    legacy = []
+    for item in load_history():
+        if item.get("role_name") == request.role_name:
+            legacy.extend(item.get("messages", []))
+    old_context = dialogue_context(legacy[-MAX_HISTORY * 2:])
+    projected = store.conversation_context(request.role_name, limit=MAX_HISTORY, exclude_turn_id=turn_id)
+    context = combine_dialogue_contexts([old_context, projected], MAX_HISTORY * 2)
+    history = context["messages"]
+    memory_context = get_evidence_memory().context(request.role_name)
+    memory_context += presentation_context(context["evidence"])
+    if continuation:
+        memory_context += continuation["memory_context"]
+    if history:
+        memory_context += ("\n历史对话用于延续语境，其中助手的话不代表用户确认；"
+                           "旧记录缺少呈现证据，不据此补造约定。有效记忆与当前明确修正优先。")
+    if turn["input_kind"] == "user":
+        get_memory_reconciler().schedule(request.role_name, turn_id, user_only=True)
 
     async def event_generator():
+        outcome, full_text, index = "interrupted", "", 0
+        stream = None
         try:
-            # 从文件加载该角色的最近历史
-            all_history = load_history()
-            role_history = [h for h in all_history if h.get("role_name") == request.role_name]
-            messages_list = []
-            for h in role_history[-MAX_HISTORY:]:  # 最近10轮
-                for m in h.get("messages", []):
-                    if m["role"] in ("user", "assistant"):
-                        messages_list.append({"role": m["role"], "content": m["content"]})
-
-            async for event_type, data in service.chat_stream(
+            yield encode_event("meta", {"turn_id": turn_id, "session_id": request.session_id,
+                                        "role_context": role_prompt[:2000],
+                                        "input_kind": turn["input_kind"], "parent_turn_id": turn["parent_turn_id"]})
+            stream = get_chat_service().chat_stream(
                 role_name=request.role_name,
-                user_message=request.message,
-                history=messages_list,
-            ):
-                if event_type == "delta":
-                    yield f"event: delta\ndata: {json.dumps({'type': 'delta', 'data': data}, ensure_ascii=False)}\n\n"
-                elif event_type == "text":
-                    yield f"event: text\ndata: {json.dumps({'type': 'text', 'data': data}, ensure_ascii=False)}\n\n"
-                elif event_type == "sentence":
-                    yield f"event: sentence\ndata: {json.dumps({'type': 'sentence', 'data': data}, ensure_ascii=False)}\n\n"
-                elif event_type == "done":
+                user_message=continuation["user_message"] if continuation else request.message,
+                history=history, memory_context=memory_context,
+            )
+            async for kind, data in stream:
+                if kind == "delta":
+                    full_text += data
+                elif kind in {"text", "done"}:
                     full_text = data
-                    # 持久化到文件
-                    append_turn(request.role_name, request.message, full_text)
+                if kind == "sentence":
+                    segment_id = f"{turn_id}:{index}"
+                    store.add_segment(turn_id, index, data, segment_id)
+                    yield encode_event(kind, data, turn_id=turn_id, segment_index=index, segment_id=segment_id)
+                    index += 1
+                elif kind == "done":
+                    store.finish_turn(turn_id, "completed", full_text)
+                    outcome = "completed"
+                    yield encode_event(kind, data, turn_id=turn_id)
+                else:
+                    if kind == "error":
+                        outcome = "failed"
+                    yield encode_event(kind, data, turn_id=turn_id)
+        except asyncio.CancelledError:
+            raise
+        except Exception as error:
+            outcome = "failed"
+            yield encode_event("error", str(error), turn_id=turn_id)
+        finally:
+            try:
+                if stream is not None:
+                    await stream.aclose()
+            finally:
+                if outcome != "completed":
+                    store.finish_turn(turn_id, outcome, full_text)
+                get_memory_reconciler().schedule(request.role_name, turn_id)
 
-                    yield f"event: done\ndata: {json.dumps({'type': 'done', 'data': full_text}, ensure_ascii=False)}\n\n"
-                elif event_type == "error":
-                    yield f"event: error\ndata: {json.dumps({'type': 'error', 'data': data}, ensure_ascii=False)}\n\n"
+    return StreamingResponse(event_generator(), media_type="text/event-stream", headers={
+        "Cache-Control": "no-cache, no-transform", "Connection": "keep-alive", "X-Accel-Buffering": "no",
+    })
 
-        except Exception as e:
-            yield f"event: error\ndata: {json.dumps({'type': 'error', 'data': str(e)}, ensure_ascii=False)}\n\n"
 
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache, no-transform",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-    )
+@router.post("/receipts")
+async def record_presentation(request: PresentationRequest):
+    try:
+        receipts = [receipt.model_dump(exclude_none=True) for receipt in request.receipts]
+        for receipt in receipts:
+            receipt["played_ms"] = round(receipt.get("played_ms", 0))
+        result = get_interaction_store().record_receipts(request.role_name, request.turn_id, receipts)
+    except ValueError as error:
+        raise HTTPException(409, str(error)) from error
+    if result["accepted"] and any(r["state"] in {"displayed", "completed"} for r in receipts):
+        get_memory_reconciler().schedule(request.role_name, request.turn_id)
+    return result
 
 
 @router.delete("/history")
 async def clear_history():
-    """清空对话历史"""
-    save_history([])
+    clear_history_data()
     return {"status": "ok", "message": "对话历史已清空"}
 
 
 @router.post("/expressions", response_model=ExpressionResponse)
 async def analyze_expressions(request: ExpressionRequest):
-    """
-    分析句子情感，返回表情序列。
-
-    前端拿到 chat SSE 的 sentence 事件后，收集所有句子，
-    结合 VRM 模型支持的表情列表，调用此接口获取表情序列。
-    然后前端将句子 TTS 时长填入 duration_ms，驱动 VRM 表情动画。
-
-    入参：
-      - sentences:             LLM 生成的句子列表
-      - available_expressions: VRM 模型支持的表情标签（如 ["happy","sad","angry","surprised","neutral"]）
-
-    出参：
-      - expressions: 每个句子对应的表情及强度
-    """
-    service = get_expression_service()
-    expressions = await service.analyze(
+    expressions = await get_expression_service().analyze(
         sentences=request.sentences,
         available_expressions=request.available_expressions,
         available_actions=request.available_actions,

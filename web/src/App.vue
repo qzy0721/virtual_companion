@@ -1,10 +1,11 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { apiUrl } from './api'
 import { guessExpression } from './expression'
 import ChatPanel from './components/ChatPanel.vue'
 import CompanionStage from './components/CompanionStage.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
+import MemoryPanel from './components/MemoryPanel.vue'
 import RoleSidebar from './components/RoleSidebar.vue'
 import TitleBar from './components/TitleBar.vue'
 import { openConfirm } from './composables/useConfirm'
@@ -13,6 +14,7 @@ import { useChatStream } from './composables/useChatStream'
 import { useConversationMode } from './composables/useConversationMode'
 import { usePet } from './composables/usePet'
 import { useTtsQueue } from './composables/useTtsQueue'
+import { createReceiptReporter } from './composables/interactionReceipts'
 
 const roles = ref([])
 const selectedRole = ref(null)
@@ -24,6 +26,10 @@ const notices = ref([])
 const generationStatus = ref('')
 const stage = ref(null)
 const generating = ref(false)
+const memoryOpen = ref(false)
+const memoryRefresh = ref(0)
+const pendingText = ref([])
+const sessionId = globalThis.crypto?.randomUUID?.() || `session-${Date.now()}`
 // 侧边栏拖拽宽度：null 表示未拖拽（走默认 clamp），拖拽后在 320-640px 之间。
 const sidebarWidth = ref(null)
 const MIN_SIDEBAR = 320
@@ -52,6 +58,38 @@ const companionDriver = computed(() => ({
 
 const tts = useTtsQueue(companionDriver)
 const chat = useChatStream()
+let receiptFailureShown = false
+const receipts = createReceiptReporter({
+  send: async (body) => {
+    const response = await fetch(apiUrl('/api/chat/receipts'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      keepalive: true,
+      signal: typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(2500) : undefined,
+    })
+    if (!response.ok) throw new Error('交互记录尚未同步')
+    receiptFailureShown = false
+  },
+  onError: () => {
+    if (!receiptFailureShown) pushNotice('交互记录尚未同步，将在下一轮重试', { tone: 'error' })
+    receiptFailureShown = true
+  },
+})
+
+function flushPendingText() {
+  if (!pendingText.value.length || document.visibilityState !== 'visible') return
+  const batch = pendingText.value
+  pendingText.value = []
+  for (const item of batch) {
+    receipts.report(item.role, item.turnId, {
+      segment_ids: [item.segmentId],
+      channel: 'text',
+      state: 'displayed',
+    })
+  }
+}
+document.addEventListener('visibilitychange', flushPendingText)
 // ASR 完成/错误回调：对话模式激活时路由给对话模式状态机，否则走默认（填入输入框）
 let convApi = null
 const asr = useAsrStream({
@@ -142,6 +180,7 @@ async function sendChatText(text) {
   }
 
   const activeGeneration = ++sendGeneration
+  const turnId = globalThis.crypto?.randomUUID?.() || `turn-${Date.now()}-${Math.random().toString(36).slice(2)}`
   generating.value = true
   messageDraft.value = ''
   const sentences = []
@@ -155,6 +194,8 @@ async function sendChatText(text) {
     await chat.send({
       roleName: selectedRole.value,
       message: text,
+      turnId,
+      sessionId,
       onStart: () => {
         tts.stop()
         addMessage('user', text)
@@ -171,15 +212,21 @@ async function sendChatText(text) {
         if (assistantMessage) assistantMessage.text = content || '...'
         hasAssistantText = Boolean(content)
       },
-      onSentence: async (sentence) => {
+      onSentence: async (sentence, metadata = {}) => {
+        const index = Number.isInteger(metadata.segment_index) ? metadata.segment_index : sentences.length
+        const segmentId = metadata.segment_id || `${turnId}:${index}`
         const expression = guessExpression(sentence)
         sentences.push(sentence)
         generationStatus.value = `已生成 ${sentences.length} 句...`
+        pendingText.value.push({ role: selectedRole.value, turnId, segmentId })
+        void nextTick(flushPendingText)
         await tts.enqueue({ text: sentence, roleName: selectedRole.value, ...expression })
       },
       onDone: async (content) => {
         if (assistantMessage) assistantMessage.text = content
         generationStatus.value = sentences.length ? '文本完成，正在匹配表情...' : '完成'
+        memoryRefresh.value++
+        void nextTick(() => { receipts.flush().catch(() => {}) })
         const expressions = await fetchExpressions(sentences)
         if (activeGeneration !== sendGeneration) return
         for (const item of expressions) {
@@ -192,6 +239,7 @@ async function sendChatText(text) {
       onError: (error) => {
         if (assistantMessage) assistantMessage.text = `出错：${error}`
         generationStatus.value = ''
+        void receipts.flush().catch(() => {})
       },
     })
   } finally {
@@ -209,6 +257,7 @@ function cancelGeneration() {
   generating.value = false
   generationStatus.value = ''
   chat.cancel()
+  void receipts.flush().catch(() => {})
 }
 
 // ============ 侧边栏拖拽分界线 ============
@@ -282,6 +331,7 @@ async function loadRoles() {
 async function selectRole(roleName) {
   if (selectedRole.value === roleName) return
   cancelGeneration()
+  memoryOpen.value = false
   tts.stop()
   selectedRole.value = roleName
   pet.setRole(roleName)
@@ -345,42 +395,46 @@ async function uploadVrm(file) {
   }
 }
 
-async function showMemories() {
-  try {
-    const response = await fetch(apiUrl('/api/memory'))
-    const data = await response.json()
-    if (!data.total) {
-      pushNotice('还没有长期记忆')
-      return
-    }
-    const lines = data.memories.slice(-5).map((memory) => `#${memory.id} ${memory.content}`)
-    pushNotice([`长期记忆 ${data.total} 条：`, ...lines].join('\n'), { sticky: true })
-  } catch {
-    pushNotice('获取记忆失败', { tone: 'error' })
+function showMemories() {
+  if (!selectedRole.value) {
+    pushNotice('请先在左侧选择角色')
+    return
   }
+  memoryOpen.value = true
+  void receipts.flush().catch(() => {})
 }
 
 async function generateMemory() {
-  pushNotice('正在生成长期记忆...')
+  if (!selectedRole.value) {
+    pushNotice('请先在左侧选择角色')
+    return
+  }
+  pushNotice('正在整理角色记忆...')
   try {
-    const response = await fetch(apiUrl('/api/memory/generate'), { method: 'POST' })
+    const response = await fetch(apiUrl(`/api/memory/generate?role=${encodeURIComponent(selectedRole.value)}`), { method: 'POST' })
     const data = await response.json()
-    pushNotice(data.memory || data.message || '暂无可提取的记忆', { sticky: true })
+    pushNotice(data.message || data.status || '记忆整理完成', { sticky: true })
+    memoryRefresh.value++
   } catch {
-    pushNotice('生成记忆失败', { tone: 'error' })
+    pushNotice('整理记忆失败', { tone: 'error' })
   }
 }
 
 async function clearMemories() {
+  if (!selectedRole.value) {
+    pushNotice('请先在左侧选择角色')
+    return
+  }
   const ok = await openConfirm({
     title: '清空记忆',
-    message: '确定清空所有长期记忆吗？',
+    message: `确定清空角色“${selectedRole.value}”的长期记忆吗？`,
     danger: true,
   })
   if (!ok) return
   try {
-    await fetch(apiUrl('/api/memory'), { method: 'DELETE' })
-    pushNotice('长期记忆已清空')
+    await fetch(apiUrl(`/api/memory?role=${encodeURIComponent(selectedRole.value)}`), { method: 'DELETE' })
+    memoryRefresh.value++
+    pushNotice('角色长期记忆已清空')
   } catch {
     pushNotice('清空记忆失败', { tone: 'error' })
   }
@@ -394,9 +448,13 @@ async function clearHistory() {
   })
   if (!ok) return
   try {
+    await receipts.flush().catch(() => {})
     await fetch(apiUrl('/api/history'), { method: 'DELETE' })
     await fetch(apiUrl('/api/chat/history'), { method: 'DELETE' })
+    receipts.discard()
+    pendingText.value = []
     messages.value = []
+    memoryRefresh.value++
     pushNotice('对话历史已清空')
   } catch {
     pushNotice('清空历史失败', { tone: 'error' })
@@ -420,6 +478,8 @@ onMounted(async () => {
 
 onBeforeUnmount(async () => {
   cancelGeneration()
+  document.removeEventListener('visibilitychange', flushPendingText)
+  await receipts.dispose()
   await conv.stop()
   await tts.dispose()
   await asr.dispose()
@@ -430,6 +490,13 @@ onBeforeUnmount(async () => {
   <div class="app-shell">
     <TitleBar />
     <ConfirmDialog />
+    <MemoryPanel
+      :open="memoryOpen"
+      :role-name="selectedRole || ''"
+      :refresh-key="memoryRefresh"
+      @close="memoryOpen = false"
+      @notify="pushNotice"
+    />
     <RoleSidebar
       :style="sidebarWidth ? { width: sidebarWidth + 'px' } : null"
       :roles="roles"
