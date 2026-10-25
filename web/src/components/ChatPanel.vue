@@ -14,11 +14,13 @@ const props = defineProps({
   voiceStatus: { type: String, default: '' },
   ttsStatus: { type: String, default: '就绪' },
   queueLength: { type: Number, default: 0 },
+  ttsPaused: { type: Boolean, default: false },
   convActive: { type: Boolean, default: false },
   convStatus: { type: String, default: '' },
+  convCanResume: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['send', 'toggle-voice', 'toggle-conv', 'dismiss-notice'])
+const emit = defineEmits(['send', 'toggle-voice', 'toggle-conv', 'resume-speech', 'dismiss-notice'])
 const messagesElement = ref(null)
 const composerElement = ref(null)
 let scrollFrame = 0
@@ -96,9 +98,15 @@ function handleComposerKeydown(event) {
 
     <div class="status-bar">
       <span v-if="generationStatus">{{ generationStatus }}</span>
-      <span>队列: {{ queueLength }}{{ ttsStatus !== '就绪' ? ` · ${ttsStatus}` : '' }}</span>
+      <span :class="{ 'tts-paused': ttsPaused }">队列: {{ queueLength }}{{ ttsStatus !== '就绪' ? ` · ${ttsStatus}` : '' }}</span>
       <span>{{ voiceStatus }}</span>
       <span v-if="convStatus" class="conv-status">{{ convStatus }}</span>
+      <button
+        v-if="convCanResume"
+        class="btn btn-secondary btn-small status-resume"
+        type="button"
+        @click="emit('resume-speech')"
+      >继续播放</button>
     </div>
 
     <form class="input-bar" @submit.prevent="submit">
@@ -125,7 +133,7 @@ function handleComposerKeydown(event) {
         :class="{ active: convActive }"
         :disabled="!canChat || (!convActive && (sending || voiceMode !== 'idle'))"
         :aria-pressed="convActive"
-        title="自动录音 → 识别 → 对话 → 播放，全程无感"
+        title="常驻麦克风自动聆听；说话可随时打断，说“继续”接着听"
         type="button"
         @click="emit('toggle-conv')"
       >{{ convActive ? ' 结束对话' : ' 对话模式' }}</button>

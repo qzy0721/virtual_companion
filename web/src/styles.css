@@ -327,7 +327,7 @@ body.resizing-sidebar { cursor: col-resize; user-select: none; -webkit-user-sele
 .notice-close { flex: none; padding: 0 2px; color: var(--text-faint); background: transparent; cursor: pointer; font-size: 1rem; line-height: 1.2; }
 .notice-close:hover { color: var(--text-muted); }
 @keyframes notice-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-.status-bar { display: flex; gap: 14px; padding: 6px 20px; border-top: 1px solid var(--border); color: var(--text-faint); background: var(--bg-panel); font-size: 0.72rem; }
+.status-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 6px 20px; border-top: 1px solid var(--border); color: var(--text-faint); background: var(--bg-panel); font-size: 0.72rem; }
 .input-bar { position: relative; z-index: 2; display: flex; flex-shrink: 0; align-items: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--bg-panel); }
 .input-bar textarea { width: 100%; min-width: 0; min-height: 44px; max-height: 132px; flex: 1; padding: 11px 16px; overflow-y: hidden; border: 1px solid var(--border); border-radius: 18px; outline: 0; background: var(--bg-subtle); line-height: 1.45; resize: none; transition: border-color 0.16s ease, box-shadow 0.16s ease; }
 .input-bar .btn { min-height: 44px; }
@@ -344,6 +344,8 @@ body.resizing-sidebar { cursor: col-resize; user-select: none; -webkit-user-sele
 .conv-mode-btn.active { border-color: var(--accent); color: #fff; background: var(--accent); box-shadow: 0 2px 12px var(--accent-border); }
 .conv-mode-btn.active:not(:disabled):hover { border-color: var(--accent-deep); color: #fff; background: var(--accent-deep); }
 .conv-status { color: var(--accent); font-size: 0.76rem; white-space: nowrap; }
+.tts-paused { color: var(--pink); }
+.status-resume { min-height: 22px; padding: 0 9px; font-size: 0.7rem; line-height: 1; }
 
 .role-manager-page { width: min(1400px, 100%); min-height: 100%; margin: 0 auto; padding: 44px clamp(20px, 4vw, 56px); background: var(--bg-page); }
 .role-manager-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 28px; }

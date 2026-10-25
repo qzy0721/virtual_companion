@@ -7,6 +7,8 @@ export function useTtsQueue(stageRef) {
   // 对话模式需要知道"合成+播放是否全部结束"（active 为其循环依据）
   const playing = ref(false)
   const pendingCount = ref(0)
+  // 被用户打断后，队列保持在当前位置；resume 可以从暂停点继续。
+  const suspended = ref(false)
   let audioContext = null
   let analyser = null
   let analyserConnected = false
@@ -14,6 +16,7 @@ export function useTtsQueue(stageRef) {
   let currentAudio = null
   let currentSource = null
   let currentItem = null
+  let mouthTimer = null
   let audioQueue = []
   let pending = []
   let inFlight = []
@@ -27,7 +30,8 @@ export function useTtsQueue(stageRef) {
 
   function updateQueueLength() {
     queueLength.value = audioQueue.length
-    pendingCount.value = pending.length + inFlight.length + audioQueue.length
+    // 当前正在播放/暂停的句子也算未完成，否则打断后 active 会误判为 false。
+    pendingCount.value = pending.length + inFlight.length + audioQueue.length + (currentItem ? 1 : 0)
   }
 
   async function ensureAudioReady() {
@@ -50,6 +54,19 @@ export function useTtsQueue(stageRef) {
       sum += normalized * normalized
     }
     return Math.sqrt(sum / audioData.length)
+  }
+
+  function stopMouthLoop() {
+    if (mouthTimer) window.clearInterval(mouthTimer)
+    mouthTimer = null
+  }
+
+  function startMouthLoop(audio) {
+    stopMouthLoop()
+    if (!audioContext || !analyser) return
+    mouthTimer = window.setInterval(() => {
+      if (!audio.paused) stage()?.setMouthOpen(Math.min(volume() * 3.5, 1))
+    }, 50)
   }
 
   async function fetchTts(text, roleName) {
@@ -81,7 +98,7 @@ export function useTtsQueue(stageRef) {
       while (pending.length && activeGeneration === generation) {
         const pendingItem = pending.shift()
         const index = pendingItem.index
-        status.value = `合成 ${index + 1}...`
+        if (!suspended.value) status.value = `合成 ${index + 1}...`
         let result
         inFlight.push(pendingItem)
         try {
@@ -96,7 +113,7 @@ export function useTtsQueue(stageRef) {
         if (activeGeneration !== generation) return
         audioQueue.push({ ...pendingItem, ...result })
         updateQueueLength()
-        if (!playing.value) playNext()
+        if (!playing.value && !suspended.value) playNext()
       }
     } finally {
       if (activeGeneration === generation) {
@@ -106,6 +123,10 @@ export function useTtsQueue(stageRef) {
   }
 
   function playNext() {
+    if (suspended.value) {
+      playing.value = false
+      return
+    }
     if (!audioQueue.length) {
       playing.value = false
       currentItem = null
@@ -125,7 +146,6 @@ export function useTtsQueue(stageRef) {
     const audio = new Audio(currentItem.url)
     audio.crossOrigin = 'anonymous'
     currentAudio = audio
-    let mouthTimer = null
 
     if (audioContext && analyser) {
       const source = audioContext.createMediaElementSource(audio)
@@ -135,9 +155,7 @@ export function useTtsQueue(stageRef) {
         analyserConnected = true
       }
       currentSource = source
-      mouthTimer = window.setInterval(() => {
-        if (!currentAudio?.paused) stage()?.setMouthOpen(Math.min(volume() * 3.5, 1))
-      }, 50)
+      startMouthLoop(audio)
     }
 
     const playingItem = currentItem
@@ -145,7 +163,7 @@ export function useTtsQueue(stageRef) {
     const finish = () => {
       if (finished) return
       finished = true
-      if (mouthTimer) window.clearInterval(mouthTimer)
+      stopMouthLoop()
       try { currentSource?.disconnect() } catch {}
       currentSource = null
       currentAudio = null
@@ -154,7 +172,8 @@ export function useTtsQueue(stageRef) {
       stage()?.clearExpression()
       stage()?.stopAction()
       playing.value = false
-      playNext()
+      updateQueueLength()
+      if (!suspended.value) playNext()
     }
     audio.onended = finish
     audio.onerror = finish
@@ -183,8 +202,47 @@ export function useTtsQueue(stageRef) {
     }
   }
 
+  // 打断：立刻静音并保留当前句的播放位置和后续队列，等待“继续”。
+  // 即使还没有音频（角色仍在思考），也会进入暂停态，避免新一轮生成突然开口。
+  function interrupt() {
+    const hasWork = playing.value || pendingCount.value > 0 || Boolean(currentItem)
+    if (suspended.value) return hasWork
+    suspended.value = true
+    if (currentAudio) {
+      try { currentAudio.pause() } catch {}
+      stage()?.setMouthOpen(0)
+    }
+    stopMouthLoop()
+    playing.value = false
+    status.value = hasWork ? '已暂停' : '等待播放'
+    updateQueueLength()
+    return hasWork
+  }
+
+  async function resume() {
+    if (!suspended.value) return false
+    await ensureAudioReady()
+    suspended.value = false
+    if (currentAudio && currentItem) {
+      try {
+        await currentAudio.play()
+        playing.value = true
+        startMouthLoop(currentAudio)
+        status.value = `播放 ${currentItem.index + 1}`
+        updateQueueLength()
+        return true
+      } catch {
+        playing.value = false
+      }
+    }
+    playNext()
+    return true
+  }
+
   function stop() {
     generation += 1
+    suspended.value = false
+    stopMouthLoop()
     currentAudio?.pause()
     if (currentAudio) currentAudio.currentTime = 0
     try { currentSource?.disconnect() } catch {}
@@ -210,8 +268,22 @@ export function useTtsQueue(stageRef) {
     audioContext = null
   }
 
-  // active: 有待合成/待播放/播放中的任何一项即为 true（对话模式循环依据）
+  // active: 有待合成/待播放/播放中/暂停中的任何一项即为 true（对话模式循环依据）
   const active = computed(() => playing.value || pendingCount.value > 0)
 
-  return { status, queueLength, playing, pendingCount, active, ensureAudioReady, enqueue, patch, stop, dispose }
+  return {
+    status,
+    queueLength,
+    playing,
+    pendingCount,
+    active,
+    suspended,
+    ensureAudioReady,
+    enqueue,
+    patch,
+    interrupt,
+    resume,
+    stop,
+    dispose,
+  }
 }

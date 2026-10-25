@@ -29,6 +29,8 @@ const generating = ref(false)
 const memoryOpen = ref(false)
 const memoryRefresh = ref(0)
 const pendingText = ref([])
+// 当前角色已经送进 TTS 的文本，用于打断后的回声判定与“继续”恢复。
+const assistantSpeechText = ref('')
 const sessionId = globalThis.crypto?.randomUUID?.() || `session-${Date.now()}`
 // 侧边栏拖拽宽度：null 表示未拖拽（走默认 clamp），拖拽后在 320-640px 之间。
 const sidebarWidth = ref(null)
@@ -111,6 +113,8 @@ const asr = useAsrStream({
     }
     pushNotice(`语音识别失败：${message}`, { tone: 'error' })
   },
+  onSpeechStart: () => convApi?.onSpeechStart(),
+  onSpeechEnd: (event) => convApi?.onSpeechEnd(event),
 })
 
 const conv = useConversationMode({
@@ -119,6 +123,7 @@ const conv = useConversationMode({
   sendText: (text) => sendChatText(text),
   cancel: cancelGeneration,
   notify: pushNotice,
+  assistantText: () => assistantSpeechText.value,
 })
 convApi = conv
 
@@ -198,6 +203,7 @@ async function sendChatText(text) {
       sessionId,
       onStart: () => {
         tts.stop()
+        assistantSpeechText.value = ''
         addMessage('user', text)
         assistantMessage = addMessage('assistant', '思考中...')
         generationStatus.value = '思考中...'
@@ -217,6 +223,7 @@ async function sendChatText(text) {
         const segmentId = metadata.segment_id || `${turnId}:${index}`
         const expression = guessExpression(sentence)
         sentences.push(sentence)
+        assistantSpeechText.value += sentence
         generationStatus.value = `已生成 ${sentences.length} 句...`
         pendingText.value.push({ role: selectedRole.value, turnId, segmentId })
         void nextTick(flushPendingText)
@@ -533,11 +540,14 @@ onBeforeUnmount(async () => {
       :voice-status="asr.status.value"
       :tts-status="tts.status.value"
       :queue-length="tts.queueLength.value"
+      :tts-paused="tts.suspended.value"
       :conv-active="conv.active.value"
       :conv-status="conv.statusText.value"
+      :conv-can-resume="conv.canResume.value"
       @send="sendMessage"
       @toggle-voice="toggleVoice"
       @toggle-conv="toggleConvMode"
+      @resume-speech="conv.resumeSpeech"
       @dismiss-notice="dismissNotice"
     />
   </div>

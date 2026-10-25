@@ -30,9 +30,12 @@ window.setPetTheme = applyPetTheme
 
 const tts = useTtsQueue(stage)
 const chat = useChatStream()
+const assistantSpeechText = ref('')
 const asr = useAsrStream({
   onComplete: (text) => conversationApi?.onAsrComplete(text),
   onError: (message) => conversationApi?.onAsrError(message),
+  onSpeechStart: () => conversationApi?.onSpeechStart(),
+  onSpeechEnd: (event) => conversationApi?.onSpeechEnd(event),
 })
 
 function notify(message) {
@@ -75,10 +78,14 @@ async function sendChatText(text) {
   const completed = await chat.send({
     roleName: roleName.value,
     message,
-    onStart: () => tts.stop(),
+    onStart: () => {
+      tts.stop()
+      assistantSpeechText.value = ''
+    },
     onSentence: async (sentence) => {
       const expression = guessExpression(sentence)
       sentences.push(sentence)
+      assistantSpeechText.value += sentence
       await tts.enqueue({ text: sentence, roleName: roleName.value, ...expression })
     },
     onDone: async () => {
@@ -99,6 +106,7 @@ const conversation = useConversationMode({
   sendText: sendChatText,
   cancel: cancelGeneration,
   notify,
+  assistantText: () => assistantSpeechText.value,
 })
 conversationApi = conversation
 

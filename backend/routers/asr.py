@@ -64,12 +64,29 @@ async def realtime_speech_to_text(websocket: WebSocket):
                         await send_message("partial", text=text)
                 elif event_name == "task-finished":
                     text = _merge_transcript("".join(final_segments), partial_segment)
-                    await send_message("done", text=text)
+                    # 先处理服务端状态再发 done：前端收到 done 后可能立刻启动
+                    # 下一轮（尤其是快速连续说话），这里不能让它看到旧任务仍占用。
                     partial_segment = ""
                     session.reset_task()
+                    await send_message("done", text=text)
                     return
                 elif event_name == "task-failed":
                     message = header.get("error_message") or "实时语音识别任务失败"
+                    error_code = str(header.get("error_code") or "")
+                    # VAD 误触发或用户只发出很短的噪声时，DashScope 会认为
+                    # 没有有效音频。这不是故障，按空话语结束即可。
+                    if (
+                        "NO_VALID_AUDIO" in error_code
+                        or "NO_VALID_AUDIO" in message
+                        or "NO_VALID_FRAGMENT" in error_code
+                        or "NO_VALID_FRAGMENT" in message
+                    ):
+                        text = _merge_transcript("".join(final_segments), partial_segment)
+                        partial_segment = ""
+                        session.reset_task()
+                        await send_message("done", text=text)
+                        await session.close()
+                        return
                     await send_message("error", message=message)
                     await session.close()
                     return
@@ -115,6 +132,23 @@ async def realtime_speech_to_text(websocket: WebSocket):
 
             command = control.get("type")
             if command == "start":
+                if session.is_task_active:
+                    await send_message("error", message="上一段语音尚未结束")
+                    continue
+                if relay_task is not None:
+                    # 上一轮刚发完 done，relay 协程可能还在 finally 里收尾。
+                    # 等它退出（最多 1 秒），避免把客户端的快速重启当成并发任务。
+                    try:
+                        await asyncio.wait_for(asyncio.shield(relay_task), timeout=1.0)
+                    except asyncio.TimeoutError:
+                        relay_task.cancel()
+                        try:
+                            await relay_task
+                        except asyncio.CancelledError:
+                            pass
+                    except asyncio.CancelledError:
+                        pass
+                    relay_task = None
                 if session.is_task_active or relay_task is not None:
                     await send_message("error", message="上一段语音尚未结束")
                     continue
